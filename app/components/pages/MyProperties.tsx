@@ -37,6 +37,8 @@ import {
   ArrowLeftRight,
   X,
   Eye,
+  Save,
+  Loader2,
 } from "lucide-react";
 import {
   PORTFOLIO_ASSETS,
@@ -56,6 +58,8 @@ import {
   type PropertyAsset,
   cn,
 } from "../../lib/utils";
+import { useAuth } from "../../lib/auth";
+import { supabase } from "../../lib/supabase";
 
 interface PropertyDetailProps {
   asset: PropertyAsset;
@@ -63,6 +67,8 @@ interface PropertyDetailProps {
   onClose: () => void;
   comparisonAsset?: PropertyAsset | null;
   onCompare?: (asset: PropertyAsset) => void;
+  onEdit?: (asset: PropertyAsset) => void;
+  onDelete?: (asset: PropertyAsset) => void;
 }
 
 function PropertyDetail({
@@ -71,6 +77,8 @@ function PropertyDetail({
   onClose,
   comparisonAsset,
   onCompare,
+  onEdit,
+  onDelete,
 }: PropertyDetailProps) {
   const [displayCurrency, setDisplayCurrency] = useState<CurrencyCode>(asset.currency);
 
@@ -421,11 +429,38 @@ function PropertyDetail({
         {/* Footer */}
         <div className="flex items-center justify-between p-4 border-t border-slate-800">
           <div className="flex gap-2">
-            <button className="btn-secondary text-sm">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                if (onEdit) {
+                  onEdit(asset);
+                }
+              }}
+              className="btn-secondary text-sm"
+              style={{ pointerEvents: 'auto', position: 'relative', zIndex: 20 }}
+            >
               <Edit2 className="w-4 h-4 ml-1" />
               ערוך נכס
             </button>
-            <button className="btn-ghost text-red-400 text-sm">
+            <button 
+              type="button"
+              onClick={async (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                
+                if (!onDelete) return;
+                
+                // Confirm deletion
+                const confirmed = window.confirm(`האם אתה בטוח שברצונך למחוק את הנכס "${asset.name}"?`);
+                if (!confirmed) return;
+                
+                onDelete(asset);
+              }}
+              className="btn-ghost text-red-400 text-sm hover:bg-red-500/20"
+              style={{ pointerEvents: 'auto', position: 'relative', zIndex: 20 }}
+            >
               <Trash2 className="w-4 h-4 ml-1" />
               מחק
             </button>
@@ -441,19 +476,26 @@ function PropertyDetail({
 
 export default function MyProperties() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedAsset, setSelectedAsset] = useState<PropertyAsset | null>(null);
   const [comparisonAsset, setComparisonAsset] = useState<PropertyAsset | null>(null);
   const [filter, setFilter] = useState<"all" | "uk" | "cyprus">("all");
   const [sortBy, setSortBy] = useState<"value" | "yield" | "date">("value");
   
-  // Edit modal state
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<PropertyAsset | null>(null);
-  const [editFormData, setEditFormData] = useState<{
-    purchasePrice: string;
-    monthlyRent: string;
-  }>({ purchasePrice: "", monthlyRent: "" });
+  // Modal state
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    country: "UK" as "UK" | "Israel" | "USA" | "Cyprus" | "Greece" | "Portugal" | "Georgia",
+    purchasePrice: "",
+    monthlyRent: "",
+  });
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   
   // Load assets from localStorage or use default
   const [assets, setAssets] = useState<PropertyAsset[]>(() => {
@@ -471,13 +513,13 @@ export default function MyProperties() {
   });
 
   const filteredAssets = useMemo(() => {
-    let assets = [...PORTFOLIO_ASSETS];
+    let filtered = [...assets];
 
     if (filter !== "all") {
-      assets = assets.filter((a) => a.country === filter);
+      filtered = filtered.filter((a) => a.country === filter);
     }
 
-    assets.sort((a, b) => {
+    filtered.sort((a, b) => {
       switch (sortBy) {
         case "value":
           return b.currentValue - a.currentValue;
@@ -490,8 +532,8 @@ export default function MyProperties() {
       }
     });
 
-    return assets;
-  }, [filter, sortBy]);
+    return filtered;
+  }, [filter, sortBy, assets]);
 
   const totals = useMemo(() => {
     const totalValue = filteredAssets.reduce(
@@ -513,7 +555,23 @@ export default function MyProperties() {
           <h1 className="text-2xl font-bold text-white">הנכסים שלי</h1>
           <p className="text-slate-400">ניהול ומעקב תיק הנכסים</p>
         </div>
-        <button className="btn-primary">
+        <button 
+          type="button"
+          onClick={() => {
+            setIsEditing(false);
+            setEditingAssetId(null);
+            setFormData({
+              name: "",
+              address: "",
+              country: "UK",
+              purchasePrice: "",
+              monthlyRent: "",
+            });
+            setShowPropertyModal(true);
+          }}
+          className="btn-primary"
+          style={{ pointerEvents: 'auto' }}
+        >
           <Plus className="w-4 h-4 ml-1" />
           הוסף נכס
         </button>
@@ -656,7 +714,21 @@ export default function MyProperties() {
         })}
 
         {/* Add Property Card */}
-        <div className="card border-dashed border-slate-700 p-4 flex flex-col items-center justify-center min-h-[280px] cursor-pointer hover:border-emerald-500/50 transition-colors">
+        <div 
+          onClick={() => {
+            setIsEditing(false);
+            setEditingAssetId(null);
+            setFormData({
+              name: "",
+              address: "",
+              country: "UK",
+              purchasePrice: "",
+              monthlyRent: "",
+            });
+            setShowPropertyModal(true);
+          }}
+          className="card border-dashed border-slate-700 p-4 flex flex-col items-center justify-center min-h-[280px] cursor-pointer hover:border-emerald-500/50 transition-colors"
+        >
           <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-3">
             <Plus className="w-8 h-8 text-slate-500" />
           </div>
@@ -676,7 +748,407 @@ export default function MyProperties() {
           }}
           comparisonAsset={comparisonAsset}
           onCompare={setComparisonAsset}
+          onEdit={(asset) => {
+            setIsEditing(true);
+            setEditingAssetId(asset.id);
+            setFormData({
+              name: asset.name,
+              address: asset.address,
+              country: asset.country === "uk" ? "UK" : asset.country === "cyprus" ? "Cyprus" : "UK" as any,
+              purchasePrice: asset.purchasePrice.toString(),
+              monthlyRent: asset.monthlyRent.toString(),
+            });
+            setShowPropertyModal(true);
+            setSelectedAsset(null); // Close detail modal
+          }}
+          onDelete={async (asset) => {
+            setIsDeleting(true);
+            
+            try {
+              // Delete from Supabase if available
+              if (supabase && user?.id) {
+                try {
+                  await supabase.rpc('set_user_context', { user_id_param: user.id });
+                } catch (rpcError) {
+                  console.warn("[MyProperties] set_user_context RPC not available");
+                }
+
+                const { error } = await supabase
+                  .from("properties")
+                  .delete()
+                  .eq("id", asset.id)
+                  .eq("user_id", user.id);
+
+                if (error) {
+                  console.error("[MyProperties] Supabase delete error:", error);
+                  // Continue with local deletion even if Supabase fails
+                }
+              }
+
+              // Delete from local state
+              const updatedAssets = assets.filter(a => a.id !== asset.id);
+              setAssets(updatedAssets);
+              
+              // Update localStorage
+              try {
+                localStorage.setItem('investintel_my_properties', JSON.stringify(updatedAssets));
+              } catch (e) {
+                console.warn('Failed to update localStorage:', e);
+              }
+
+              // Close detail modal if the deleted asset was selected
+              if (selectedAsset?.id === asset.id) {
+                setSelectedAsset(null);
+                setComparisonAsset(null);
+              }
+
+              setSaveMessage({ type: "success", text: "הנכס נמחק בהצלחה!" });
+              setTimeout(() => {
+                setSaveMessage(null);
+              }, 2000);
+            } catch (error: any) {
+              console.error("[MyProperties] Failed to delete property:", error);
+              setSaveMessage({ 
+                type: "error", 
+                text: error?.message || "שגיאה במחיקת הנכס. נסה שוב." 
+              });
+              setTimeout(() => {
+                setSaveMessage(null);
+              }, 3000);
+            } finally {
+              setIsDeleting(false);
+            }
+          }}
         />
+      )}
+
+      {/* Property Add/Edit Modal */}
+      {showPropertyModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" dir="rtl">
+          <div 
+            className="bg-[#151921] border border-[#2D333F] rounded-xl w-full max-w-md shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-[#2D333F]">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {isEditing ? "ערוך נכס" : "הוסף נכס חדש"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPropertyModal(false);
+                  setFormData({
+                    name: "",
+                    address: "",
+                    country: "UK",
+                    purchasePrice: "",
+                    monthlyRent: "",
+                  });
+                  setSaveMessage(null);
+                }}
+                className="text-slate-400 hover:text-white transition-colors"
+                style={{ pointerEvents: 'auto' }}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Form */}
+            <div className="p-6 space-y-4">
+              {/* Name */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  שם הנכס *
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="למשל: 12 James Holt Avenue"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
+                  style={{ color: 'white' }}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Address */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  כתובת *
+                </label>
+                <input
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  placeholder="כתובת מלאה"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
+                  style={{ color: 'white' }}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Country */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  מדינה *
+                </label>
+                <select
+                  value={formData.country}
+                  onChange={(e) => setFormData({ ...formData, country: e.target.value as any })}
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-[#00C805] transition-colors"
+                  style={{ color: 'white' }}
+                >
+                  <option value="UK">🇬🇧 UK</option>
+                  <option value="Israel">🇮🇱 Israel</option>
+                  <option value="USA">🇺🇸 USA</option>
+                  <option value="Cyprus">🇨🇾 Cyprus</option>
+                  <option value="Greece">🇬🇷 Greece</option>
+                  <option value="Portugal">🇵🇹 Portugal</option>
+                  <option value="Georgia">🇬🇪 Georgia</option>
+                </select>
+              </div>
+
+              {/* Purchase Price */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  מחיר רכישה ({CURRENCIES[formData.country === "UK" ? "GBP" : formData.country === "Israel" ? "ILS" : formData.country === "USA" ? "USD" : formData.country === "Cyprus" || formData.country === "Greece" || formData.country === "Portugal" ? "EUR" : "GEL"]?.symbol || "£"})
+                </label>
+                <input
+                  type="number"
+                  value={formData.purchasePrice}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                      setFormData({ ...formData, purchasePrice: value });
+                    }
+                  }}
+                  placeholder="הזן מחיר רכישה"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
+                  style={{ color: 'white' }}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Monthly Rent */}
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  הכנסה צפויה חודשית ({CURRENCIES[formData.country === "UK" ? "GBP" : formData.country === "Israel" ? "ILS" : formData.country === "USA" ? "USD" : formData.country === "Cyprus" || formData.country === "Greece" || formData.country === "Portugal" ? "EUR" : "GEL"]?.symbol || "£"})
+                </label>
+                <input
+                  type="number"
+                  value={formData.monthlyRent}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === "" || (!isNaN(Number(value)) && Number(value) >= 0)) {
+                      setFormData({ ...formData, monthlyRent: value });
+                    }
+                  }}
+                  placeholder="הזן הכנסה חודשית צפויה"
+                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
+                  style={{ color: 'white' }}
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Save Message */}
+              {saveMessage && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  saveMessage.type === "success" 
+                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                    : "bg-red-500/20 text-red-400 border border-red-500/30"
+                }`}>
+                  {saveMessage.text}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-[#2D333F]">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPropertyModal(false);
+                  setFormData({
+                    name: "",
+                    address: "",
+                    country: "UK",
+                    purchasePrice: "",
+                    monthlyRent: "",
+                  });
+                  setSaveMessage(null);
+                }}
+                className="px-4 py-2 text-sm text-slate-300 hover:text-white transition-colors"
+                disabled={isSaving}
+                style={{ pointerEvents: isSaving ? 'none' : 'auto' }}
+              >
+                ביטול
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  // Validation
+                  if (!formData.name.trim()) {
+                    setSaveMessage({ type: "error", text: "אנא הזן שם נכס" });
+                    return;
+                  }
+                  if (!formData.address.trim()) {
+                    setSaveMessage({ type: "error", text: "אנא הזן כתובת" });
+                    return;
+                  }
+                  
+                  const purchasePrice = formData.purchasePrice ? parseFloat(formData.purchasePrice) : 0;
+                  const monthlyRent = formData.monthlyRent ? parseFloat(formData.monthlyRent) : 0;
+                  
+                  if (purchasePrice < 0 || monthlyRent < 0) {
+                    setSaveMessage({ type: "error", text: "מחיר רכישה והכנסה חייבים להיות מספרים חיוביים" });
+                    return;
+                  }
+
+                  setIsSaving(true);
+                  setSaveMessage(null);
+                  
+                  try {
+                    const currency: CurrencyCode = formData.country === "UK" ? "GBP" : 
+                                   formData.country === "Israel" ? "ILS" : 
+                                   formData.country === "USA" ? "USD" : 
+                                   formData.country === "Cyprus" || formData.country === "Greece" || formData.country === "Portugal" ? "EUR" : "GEL";
+                    
+                    const propertyData: PropertyAsset = {
+                      id: isEditing && editingAssetId ? editingAssetId : `prop_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+                      name: formData.name.trim(),
+                      address: formData.address.trim(),
+                      postcode: "", // Can be added later
+                      country: formData.country.toLowerCase() as "uk" | "cyprus",
+                      purchasePrice,
+                      currentValue: purchasePrice, // Default to purchase price
+                      currency,
+                      monthlyRent,
+                      managementFee: 10,
+                      maintenanceCosts: 0,
+                      councilTax: 0,
+                      purchaseDate: new Date().toISOString().split('T')[0],
+                    };
+
+                    if (!supabase || !user?.id) {
+                      // Fallback to localStorage
+                      if (isEditing && editingAssetId) {
+                        const updatedAssets = assets.map(a => 
+                          a.id === editingAssetId 
+                            ? propertyData
+                            : a
+                        );
+                        setAssets(updatedAssets);
+                        localStorage.setItem('investintel_my_properties', JSON.stringify(updatedAssets));
+                      } else {
+                        const updatedAssets = [...assets, propertyData];
+                        setAssets(updatedAssets);
+                        localStorage.setItem('investintel_my_properties', JSON.stringify(updatedAssets));
+                      }
+                      
+                      setSaveMessage({ type: "success", text: "הנכס נשמר בהצלחה!" });
+                      setTimeout(() => {
+                        setShowPropertyModal(false);
+                        setFormData({
+                          name: "",
+                          address: "",
+                          country: "UK",
+                          purchasePrice: "",
+                          monthlyRent: "",
+                        });
+                        setSaveMessage(null);
+                      }, 1500);
+                      setIsSaving(false);
+                      return;
+                    }
+
+                    // Use Supabase upsert
+                    try {
+                      await supabase.rpc('set_user_context', { user_id_param: user.id });
+                    } catch (rpcError) {
+                      console.warn("[MyProperties] set_user_context RPC not available");
+                    }
+
+                    const propertyRecord = {
+                      user_id: user.id,
+                      property_data: propertyData,
+                      ...(isEditing && editingAssetId ? { id: editingAssetId } : {}),
+                    };
+
+                    const { data, error } = await supabase
+                      .from("properties")
+                      .upsert(propertyRecord, {
+                        onConflict: 'id',
+                      })
+                      .select()
+                      .single();
+
+                    if (error) {
+                      console.error("[MyProperties] Supabase error:", error);
+                      throw error;
+                    }
+
+                    // Update local state
+                    if (isEditing && editingAssetId) {
+                      const updatedAssets = assets.map(a => 
+                        a.id === editingAssetId 
+                          ? propertyData
+                          : a
+                      );
+                      setAssets(updatedAssets);
+                    } else {
+                      const newAsset: PropertyAsset = {
+                        ...propertyData,
+                        id: data?.id || propertyData.id,
+                      };
+                      setAssets([...assets, newAsset]);
+                    }
+
+                    setSaveMessage({ type: "success", text: "הנכס נשמר בהצלחה!" });
+                    setTimeout(() => {
+                      setShowPropertyModal(false);
+                      setFormData({
+                        name: "",
+                        address: "",
+                        country: "UK",
+                        purchasePrice: "",
+                        monthlyRent: "",
+                      });
+                      setSaveMessage(null);
+                      setIsEditing(false);
+                      setEditingAssetId(null);
+                    }, 1500);
+                  } catch (error: any) {
+                    console.error("[MyProperties] Failed to save property:", error);
+                    setSaveMessage({ 
+                      type: "error", 
+                      text: error?.message || "שגיאה בשמירת הנכס. נסה שוב." 
+                    });
+                  } finally {
+                    setIsSaving(false);
+                  }
+                }}
+                className="px-6 py-2 bg-[#00C805] hover:bg-[#00D806] text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSaving}
+                style={{ pointerEvents: isSaving ? 'none' : 'auto' }}
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    שומר...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    שמור
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
