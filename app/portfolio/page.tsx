@@ -1444,6 +1444,17 @@ export default function PortfolioPage() {
           <Sparkles className="w-6 h-6" />
         </button>
       )}
+
+      {/* Chat Interface - Portfolio-wide AI Assistant */}
+      <ChatInterface
+        isOpen={isChatInterfaceOpen}
+        onClose={() => setIsChatInterfaceOpen(false)}
+      />
+
+      {/* Chat Interface Toggle Button */}
+      {!isChatInterfaceOpen && (
+        <ChatToggleButton onClick={() => setIsChatInterfaceOpen(true)} />
+      )}
     </div>
   );
 }
