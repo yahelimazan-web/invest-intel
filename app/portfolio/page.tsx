@@ -600,7 +600,7 @@ export default function PortfolioPage() {
                   צור תיקייה ראשונה
                 </button>
               </div>
-            ) : folders.every(f => f.properties.length === 0) ? (
+            ) : (folders.every(f => f.properties.length === 0) && properties.length === 0) ? (
               <div className="bg-slate-800/50 rounded-xl p-12 text-center border border-slate-700">
                 <Building2 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-white mb-2">אין נכסים בתיק שלך</h3>
@@ -616,7 +616,59 @@ export default function PortfolioPage() {
                 </Link>
               </div>
             ) : (
-              folders.map((folder) => {
+              <>
+                {/* Properties from properties table (synced with MyProperties) */}
+                {properties.length > 0 && (
+                  <div className="mb-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-lg font-semibold text-white">נכסים שלי (מ-My Properties)</h3>
+                      <span className="text-sm text-slate-400">{properties.length} נכסים</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {properties.map((property) => (
+                        <div
+                          key={property.id}
+                          onClick={() => {
+                            setSelectedProperty(property);
+                            setSelectedFolderId(null); // Properties from table don't have folder
+                            cancelInlineEdit();
+                          }}
+                          className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 hover:border-[#00C805]/50 transition-all cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex-1">
+                              <p className="font-semibold text-white">{property.address}</p>
+                              <p className="text-sm text-slate-400 mt-1">{property.postcode}</p>
+                            </div>
+                            <span className="text-xl">
+                              {property.country === "UK" ? "🇬🇧" : 
+                               property.country === "Israel" ? "🇮🇱" :
+                               property.country === "USA" ? "🇺🇸" :
+                               property.country === "Cyprus" ? "🇨🇾" :
+                               property.country === "Greece" ? "🇬🇷" :
+                               property.country === "Portugal" ? "🇵🇹" : "🇬🇪"}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700">
+                            {property.purchasePrice && (
+                              <span className="text-[#00C805] font-semibold">
+                                {formatCurrencyCompact(property.purchasePrice, property.country || "UK")}
+                              </span>
+                            )}
+                            {property.monthlyRent && (
+                              <span className="text-slate-300 text-sm">
+                                שכירות: {formatCurrencyCompact(property.monthlyRent, property.country || "UK")}/חודש
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Folders with properties */}
+                {folders.map((folder) => {
                 const colorClasses = getColorClasses(folder.color);
                 const isExpanded = expandedFolders.has(folder.id);
                 const filteredProps = getFilteredProperties(folder.properties);
@@ -1365,6 +1417,30 @@ export default function PortfolioPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* AI Chat - Floating */}
+      {selectedProperty && (
+        <AIChat
+          propertyData={null}
+          propertyId={selectedProperty.id}
+          financialData={null}
+          isOpen={isAIChatOpen}
+          onClose={() => setIsAIChatOpen(false)}
+        />
+      )}
+
+      {/* AI Chat Toggle Button */}
+      {selectedProperty && !isAIChatOpen && (
+        <button
+          type="button"
+          onClick={() => setIsAIChatOpen(true)}
+          className="fixed bottom-6 left-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-full shadow-lg shadow-purple-500/50 flex items-center justify-center transition-all z-50"
+          style={{ pointerEvents: 'auto' }}
+          title="שאל את ה-AI על הנכס"
+        >
+          <Sparkles className="w-6 h-6" />
+        </button>
       )}
     </div>
   );

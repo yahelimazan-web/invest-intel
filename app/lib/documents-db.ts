@@ -38,10 +38,12 @@ export interface DocumentUpload {
 
 /**
  * Load all documents for a property
+ * Optionally filter by folder name
  */
 export async function loadPropertyDocuments(
   userId: string,
-  propertyId: string
+  propertyId: string,
+  folderName?: string
 ): Promise<PropertyDocument[]> {
   if (!supabase || supabase === null) {
     console.warn("[Documents] Supabase not initialized");
@@ -56,12 +58,18 @@ export async function loadPropertyDocuments(
       console.warn("[Documents] set_user_context RPC not available");
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("property_documents")
       .select("*")
       .eq("user_id", userId)
-      .eq("property_id", propertyId)
-      .order("uploaded_at", { ascending: false });
+      .eq("property_id", propertyId);
+    
+    // Filter by folder if provided
+    if (folderName) {
+      query = query.eq("folder_id", folderName);
+    }
+    
+    const { data, error } = await query.order("uploaded_at", { ascending: false });
 
     if (error) {
       console.error("[Documents] Error loading documents:", error);
@@ -117,10 +125,11 @@ export async function uploadDocument(
       console.warn("[Documents] set_user_context RPC not available");
     }
 
-    // Generate unique file path
+    // Generate unique file path with folder structure: /{user_id}/{property_id}/{folder_name}/{file_name}
     const fileExt = upload.file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-    const storagePath = `${userId}/${upload.propertyId}/${fileName}`;
+    // Use folder_id as folder_name in storage path
+    const storagePath = `${userId}/${upload.propertyId}/${upload.folderId}/${fileName}`;
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage

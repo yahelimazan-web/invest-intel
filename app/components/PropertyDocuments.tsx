@@ -51,6 +51,7 @@ export default function PropertyDocuments({
     const loadDocs = async () => {
       setIsLoading(true);
       try {
+        // Load all documents (no folder filter for backward compatibility)
         const docs = await loadPropertyDocuments(user.id, propertyId);
         setDocuments(docs);
       } catch (error) {

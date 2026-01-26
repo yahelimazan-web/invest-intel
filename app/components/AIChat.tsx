@@ -17,6 +17,9 @@ import {
 import { cn } from "../lib/utils";
 import { type PropertyAnalysis } from "../services/api";
 import { getPropertyDocuments, type DocumentMetadata } from "./DocumentManager";
+import { loadPropertyDocuments, type PropertyDocument } from "../lib/documents-db";
+import { useAuth } from "../lib/auth";
+import { loadUserProperties } from "../lib/portfolio-db";
 
 // =============================================================================
 // Types
@@ -62,13 +65,43 @@ export default function AIChat({
   isOpen,
   onClose,
 }: AIChatProps) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [propertyDocuments, setPropertyDocuments] = useState<PropertyDocument[]>([]);
+  const [allProperties, setAllProperties] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Load property documents and all properties for context
+  useEffect(() => {
+    if (!user?.id || !isOpen) return;
+
+    const loadContext = async () => {
+      // Load documents for this property
+      if (propertyId) {
+        try {
+          const docs = await loadPropertyDocuments(user.id, propertyId);
+          setPropertyDocuments(docs);
+        } catch (error) {
+          console.error("Failed to load documents:", error);
+        }
+      }
+
+      // Load all properties for portfolio context
+      try {
+        const props = await loadUserProperties(user.id);
+        setAllProperties(props);
+      } catch (error) {
+        console.error("Failed to load properties:", error);
+      }
+    };
+
+    loadContext();
+  }, [user?.id, propertyId, isOpen]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -82,75 +115,87 @@ export default function AIChat({
     }
   }, [isOpen]);
 
-  // Build context from property data
+  // Build context from property data (including portfolio context)
   const buildPropertyContext = useCallback((): string => {
-    if (!propertyData) return "אין נתוני נכס זמינים.";
-
     const parts: string[] = [];
 
-    // Location
-    parts.push(`## מיקום
+    // If we have propertyId but no propertyData, build context from portfolio
+    if (propertyId && !propertyData && allProperties.length > 0) {
+      const property = allProperties.find(p => p.id === propertyId);
+      if (property) {
+        parts.push(`## נתוני הנכס
+- כתובת: ${property.address || property.postcode}
+- מיקוד: ${property.postcode}
+- מדינה: ${property.country}
+- מחיר רכישה: ${property.purchasePrice ? `£${property.purchasePrice.toLocaleString()}` : "לא צוין"}
+- שכירות חודשית: ${property.monthlyRent ? `£${property.monthlyRent.toLocaleString()}` : "לא צוין"}
+- תאריך רכישה: ${property.purchaseDate || "לא צוין"}
+- סטטוס: ${property.status || "watching"}`);
+      }
+    } else if (propertyData) {
+      // Location
+      parts.push(`## מיקום
 - מיקוד: ${propertyData.postcode.postcode}
 - עיר/אזור: ${propertyData.postcode.admin_district || "לא ידוע"}
 - מועצה: ${propertyData.postcode.admin_county || "לא ידוע"}
 - קואורדינטות: ${propertyData.postcode.latitude}, ${propertyData.postcode.longitude}`);
 
-    // EPC Data
-    if (propertyData.epc) {
-      parts.push(`## נתוני EPC
+      // EPC Data
+      if (propertyData.epc) {
+        parts.push(`## נתוני EPC
 - דירוג אנרגטי: ${propertyData.epc.currentEnergyRating || "לא ידוע"}
 - ציון יעילות: ${propertyData.epc.currentEnergyEfficiency || "לא ידוע"}/100
 - שטח כולל: ${propertyData.epc.totalFloorArea || "לא ידוע"} מ"ר
 - מספר חדרים: ${propertyData.epc.numberOfRooms || "לא ידוע"}
 - סוג נכס: ${propertyData.epc.buildingType || "לא ידוע"}
 - כתובת: ${propertyData.epc.address || "לא ידוע"}`);
-    }
+      }
 
-    // Prices
-    if (propertyData.prices) {
-      parts.push(`## נתוני מחירים (Land Registry)
+      // Prices
+      if (propertyData.prices) {
+        parts.push(`## נתוני מחירים (Land Registry)
 - מגמת שוק: ${propertyData.prices.marketSentiment || "לא ידוע"}
 - שינוי מחיר שנתי: ${propertyData.prices.priceGrowth?.toFixed(1) || "לא ידוע"}%
 - סה"כ עסקאות: ${propertyData.prices.soldPrices?.length || 0}`);
 
-      if (propertyData.prices.latestSale) {
-        parts.push(`- עסקה אחרונה: £${propertyData.prices.latestSale.price?.toLocaleString()} (${propertyData.prices.latestSale.date})`);
+        if (propertyData.prices.latestSale) {
+          parts.push(`- עסקה אחרונה: £${propertyData.prices.latestSale.price?.toLocaleString()} (${propertyData.prices.latestSale.date})`);
+        }
+
+        if (propertyData.prices.averageByYear?.length > 0) {
+          const latest = propertyData.prices.averageByYear[propertyData.prices.averageByYear.length - 1];
+          parts.push(`- מחיר ממוצע (${latest.year}): £${latest.avgPrice?.toLocaleString()}`);
+        }
       }
 
-      if (propertyData.prices.averageByYear?.length > 0) {
-        const latest = propertyData.prices.averageByYear[propertyData.prices.averageByYear.length - 1];
-        parts.push(`- מחיר ממוצע (${latest.year}): £${latest.avgPrice?.toLocaleString()}`);
-      }
-    }
-
-    // Crime
-    if (propertyData.crime) {
-      parts.push(`## נתוני פשיעה
+      // Crime
+      if (propertyData.crime) {
+        parts.push(`## נתוני פשיעה
 - רמת סיכון: ${propertyData.crime.riskLevel || "לא ידוע"}
 - סה"כ אירועים (6 חודשים): ${propertyData.crime.totalCrimes || 0}
 - קטגוריות נפוצות: ${propertyData.crime.byCategory?.slice(0, 3).map(c => `${c.category}: ${c.count}`).join(", ") || "לא ידוע"}`);
-    }
+      }
 
-    // Proximity
-    if (propertyData.proximity) {
-      parts.push(`## קרבה למוסדות
+      // Proximity
+      if (propertyData.proximity) {
+        parts.push(`## קרבה למוסדות
 - תחנת רכבת: ${propertyData.proximity.trainStation?.name || "לא נמצא"} (${propertyData.proximity.trainStation?.walkingTime || "-"} דקות הליכה)
 - בית חולים: ${propertyData.proximity.hospital?.name || "לא נמצא"} (${propertyData.proximity.hospital?.walkingTime || "-"} דקות הליכה)
 - אוניברסיטה: ${propertyData.proximity.university?.name || "לא נמצא"}`);
-    }
-
-    // Documents
-    if (propertyId) {
-      const docs = getPropertyDocuments(propertyId);
-      if (docs.length > 0) {
-        parts.push(`## מסמכים מצורפים
-${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
       }
-    }
 
-    // Financial Analysis (from simulator)
-    if (financialData) {
-      parts.push(`## ניתוח פיננסי (סימולטור)
+      // Documents from old DocumentManager (legacy)
+      if (propertyId) {
+        const docs = getPropertyDocuments(propertyId);
+        if (docs.length > 0) {
+          parts.push(`## מסמכים מצורפים (legacy)
+${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
+        }
+      }
+
+      // Financial Analysis (from simulator)
+      if (financialData) {
+        parts.push(`## ניתוח פיננסי (סימולטור)
 - תשואה ברוטו: ${financialData.grossYield?.toFixed(1) || "לא חושב"}%
 - תשואה נטו: ${financialData.netYield?.toFixed(1) || "לא חושב"}%
 - Cap Rate: ${financialData.capRate?.toFixed(1) || "לא חושב"}%
@@ -162,10 +207,30 @@ ${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
 - זמן החזר השקעה: ${financialData.paybackYears && financialData.paybackYears < 100 ? financialData.paybackYears.toFixed(1) + " שנים" : "לא רלוונטי"}
 - ריבית מקסימלית לפני הפסד: ${financialData.maxRateBeforeLoss?.toFixed(1) || "לא חושב"}%
 - Vacancy מקסימלי לפני הפסד: ${financialData.maxVacancyBeforeLoss || "לא חושב"}%`);
+      }
+    }
+
+    // Documents from Supabase (new system)
+    if (propertyDocuments.length > 0) {
+      parts.push(`## מסמכים מצורפים (${propertyDocuments.length} קבצים)
+${propertyDocuments.map(d => {
+        const uploadDate = new Date(d.uploaded_at).toLocaleDateString('he-IL');
+        return `- ${d.file_name} (${d.folder_id}, ${uploadDate})${d.summary ? ` - ${d.summary}` : ''}`;
+      }).join("\n")}`);
+    }
+
+    // Add portfolio context if available
+    if (allProperties.length > 0) {
+      parts.push(`## תיק השקעות כולל (${allProperties.length} נכסים)
+${allProperties.map(p => {
+        const rent = p.monthlyRent ? `שכירות: £${p.monthlyRent}/חודש` : '';
+        const price = p.purchasePrice ? `מחיר רכישה: £${p.purchasePrice.toLocaleString()}` : '';
+        return `- ${p.address || p.postcode} - ${price} ${rent}`;
+      }).join("\n")}`);
     }
 
     return parts.join("\n\n");
-  }, [propertyData, propertyId, financialData]);
+  }, [propertyData, propertyId, financialData, propertyDocuments, allProperties]);
 
   // Send message to Gemini API
   const sendMessage = async () => {
@@ -260,7 +325,7 @@ ${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
           <div>
             <h3 className="font-semibold text-white text-sm">AI Property Analyst</h3>
             <p className="text-xs text-slate-500">
-              {propertyData ? `${propertyData.postcode.postcode}` : "בחר נכס לניתוח"}
+              {propertyId ? `נכס נבחר` : "בחר נכס לניתוח"}
             </p>
           </div>
         </div>
@@ -382,14 +447,14 @@ ${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="שאל על הנכס..."
-            disabled={isLoading || !propertyData}
+            disabled={isLoading || !propertyId}
             className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50"
             style={{ color: 'white' }}
           />
           <button
             type="button"
             onClick={sendMessage}
-            disabled={isLoading || !inputValue.trim() || !propertyData}
+            disabled={isLoading || !inputValue.trim() || !propertyId}
             className={cn(
               "p-3 rounded-xl transition-all",
               isLoading || !inputValue.trim()
