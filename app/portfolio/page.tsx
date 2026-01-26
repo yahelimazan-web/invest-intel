@@ -46,6 +46,7 @@ import {
 import PropertyDocuments from "../components/PropertyDocuments";
 import PropertyDocumentFolders from "../components/PropertyDocumentFolders";
 import AIChat from "../components/AIChat";
+import ChatInterface, { ChatToggleButton } from "../components/ChatInterface";
 
 // =============================================================================
 // Financial Calculation Constants
@@ -109,6 +110,7 @@ export default function PortfolioPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+  const [isChatInterfaceOpen, setIsChatInterfaceOpen] = useState(false);
 
   // Default folders for new users
   const defaultFolders: PropertyFolder[] = [
