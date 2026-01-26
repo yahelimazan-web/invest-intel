@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   LineChart,
   Line,
@@ -439,10 +440,35 @@ function PropertyDetail({
 }
 
 export default function MyProperties() {
+  const router = useRouter();
   const [selectedAsset, setSelectedAsset] = useState<PropertyAsset | null>(null);
   const [comparisonAsset, setComparisonAsset] = useState<PropertyAsset | null>(null);
   const [filter, setFilter] = useState<"all" | "uk" | "cyprus">("all");
   const [sortBy, setSortBy] = useState<"value" | "yield" | "date">("value");
+  
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingAsset, setEditingAsset] = useState<PropertyAsset | null>(null);
+  const [editFormData, setEditFormData] = useState<{
+    purchasePrice: string;
+    monthlyRent: string;
+  }>({ purchasePrice: "", monthlyRent: "" });
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Load assets from localStorage or use default
+  const [assets, setAssets] = useState<PropertyAsset[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('investintel_my_properties');
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.warn('Failed to load from localStorage:', e);
+      }
+    }
+    return PORTFOLIO_ASSETS;
+  });
 
   const filteredAssets = useMemo(() => {
     let assets = [...PORTFOLIO_ASSETS];
