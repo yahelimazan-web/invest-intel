@@ -1,0 +1,678 @@
+@import "tailwindcss";
+
+/* ================================== */
+/* FINTECH THEME - Premium Dark Mode */
+/* ================================== */
+/* Background: #0B0E14 | Cards: #151921 | Accent: #00C805 */
+
+@theme {
+  --color-background: #0B0E14;
+  --color-foreground: #E8EAED;
+  --color-card: #151921;
+  --color-card-foreground: #E8EAED;
+  --color-primary: #00C805;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1D2430;
+  --color-muted: #2D333F;
+  --color-muted-foreground: #9CA3AF;
+  --color-border: #2D333F;
+  --color-ring: #00C805;
+  --color-accent: #00C805;
+  --font-sans: 'Inter', var(--font-rubik), system-ui, -apple-system, sans-serif;
+}
+
+/* Base styles */
+* {
+  border-color: #2D333F;
+  box-sizing: border-box;
+}
+
+html {
+  background-color: #0B0E14;
+  color-scheme: dark;
+}
+
+body {
+  background-color: #0B0E14;
+  color: #E8EAED;
+  font-family: 'Inter', var(--font-rubik), system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #0B0E14;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #2D333F;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3D4450;
+}
+
+/* ======================== */
+/* COMPONENT STYLES */
+/* ======================== */
+
+/* Glass morphism effect */
+.glass {
+  background-color: rgba(21, 25, 33, 0.7);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(45, 51, 63, 0.5);
+}
+
+/* Card styles - FinTech professional look */
+.card {
+  background-color: #151921;
+  border: 1px solid #2D333F;
+  border-radius: 12px;
+}
+
+.card-hover {
+  background-color: #151921;
+  border: 1px solid #2D333F;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+  border-color: rgba(0, 200, 5, 0.4);
+  box-shadow: 0 0 20px rgba(0, 200, 5, 0.1);
+}
+
+/* Gradient backgrounds */
+.gradient-primary {
+  background: linear-gradient(135deg, #00C805 0%, #00A004 100%);
+}
+
+.gradient-card {
+  background: linear-gradient(180deg, #151921 0%, #0B0E14 100%);
+}
+
+.gradient-accent {
+  background: linear-gradient(90deg, rgba(0, 200, 5, 0.1) 0%, rgba(0, 160, 4, 0.1) 100%);
+}
+
+/* Stats card - FinTech style */
+.stat-card {
+  background-color: #151921;
+  border: 1px solid #2D333F;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+/* Sidebar styles */
+.sidebar {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 256px;
+  background-color: #0D1017;
+  border-left: 1px solid #2D333F;
+  z-index: 40;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: #9CA3AF;
+  border-radius: 8px;
+  margin: 0 8px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.sidebar-item:hover {
+  color: #ffffff;
+  background-color: rgba(45, 51, 63, 0.5);
+}
+
+.sidebar-item.active {
+  color: #ffffff;
+  background-color: rgba(0, 200, 5, 0.15);
+  border-right: 3px solid #00C805;
+}
+
+/* Button styles - Professional look */
+/* Ensure all buttons are clickable by default */
+button,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+[role="button"] {
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  background: linear-gradient(135deg, #00C805 0%, #00A004 100%);
+  color: #ffffff;
+  padding: 10px 20px;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #00A004 0%, #008803 100%);
+  box-shadow: 0 4px 15px rgba(0, 200, 5, 0.3);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  font-weight: 500;
+  background-color: #1D2430;
+  color: #ffffff;
+  padding: 10px 20px;
+  border: 1px solid #2D333F;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background-color: #2D333F;
+  border-color: #3D4450;
+}
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 8px;
+  color: #9CA3AF;
+  padding: 8px 12px;
+  transition: all 0.2s ease;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-ghost:hover {
+  background-color: #1D2430;
+  color: #ffffff;
+}
+
+/* ======================== */
+/* INPUT STYLES - WHITE TEXT */
+/* ======================== */
+
+.input {
+  width: 100%;
+  background-color: #1D2430;
+  border: 1px solid #2D333F;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  caret-color: #00C805;
+}
+
+.input::placeholder {
+  color: #6B7280;
+}
+
+.input:focus {
+  outline: none;
+  border-color: #00C805;
+  box-shadow: 0 0 0 3px rgba(0, 200, 5, 0.2), 0 0 20px rgba(0, 200, 5, 0.1);
+}
+
+/* Select / Dropdown styles - Modern dark look */
+.select {
+  width: 100%;
+  background-color: #1D2430;
+  border: 1px solid #2D333F;
+  border-radius: 10px;
+  padding: 12px 16px;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239CA3AF'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 12px center;
+  background-size: 20px;
+  padding-left: 40px;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #00C805;
+  box-shadow: 0 0 0 3px rgba(0, 200, 5, 0.2);
+}
+
+/* Badge styles - FinTech ratings look */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+.badge-success {
+  background-color: rgba(0, 200, 5, 0.15);
+  color: #00C805;
+  border: 1px solid rgba(0, 200, 5, 0.3);
+}
+
+.badge-warning {
+  background-color: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-danger {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badge-info {
+  background-color: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* Tab styles */
+.tab-list {
+  display: flex;
+  gap: 4px;
+  background-color: rgba(11, 14, 20, 0.8);
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #2D333F;
+}
+
+.tab-trigger {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 8px;
+  color: #6B7280;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+}
+
+.tab-trigger:hover {
+  color: #9CA3AF;
+}
+
+.tab-trigger[data-state="active"],
+.tab-trigger.active {
+  background-color: #1D2430;
+  color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Property card */
+.property-card {
+  background-color: #151921;
+  border: 1px solid #2D333F;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.property-card:hover {
+  border-color: rgba(0, 200, 5, 0.4);
+  box-shadow: 0 0 20px rgba(0, 200, 5, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Alert styles */
+.alert {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.alert-success {
+  background-color: rgba(0, 200, 5, 0.1);
+  border-color: rgba(0, 200, 5, 0.3);
+  color: #00C805;
+}
+
+.alert-warning {
+  background-color: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fbbf24;
+}
+
+.alert-danger {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+}
+
+/* Notification badge */
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 20px;
+  height: 20px;
+  background-color: #ef4444;
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+/* ======================== */
+/* LEAFLET MAP STYLES */
+/* ======================== */
+
+.leaflet-container {
+  background-color: #0B0E14 !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background-color: #151921 !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  border: 1px solid #2D333F !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.leaflet-popup-content {
+  margin: 12px !important;
+  direction: rtl;
+}
+
+.leaflet-popup-tip {
+  background-color: #151921 !important;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid #2D333F !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background-color: #1D2430 !important;
+  color: #ffffff !important;
+  border-color: #2D333F !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background-color: #2D333F !important;
+}
+
+.leaflet-control-attribution {
+  background-color: rgba(11, 14, 20, 0.9) !important;
+  color: #6B7280 !important;
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+}
+
+/* Property popup styles */
+.property-popup h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: 4px;
+}
+
+.property-popup p {
+  font-size: 0.875rem;
+  color: #9CA3AF;
+  margin-bottom: 4px;
+}
+
+.property-popup .price {
+  color: #00C805;
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-top: 8px;
+}
+
+/* ======================== */
+/* RECHARTS CUSTOMIZATION */
+/* ======================== */
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  stroke: #2D333F !important;
+}
+
+.recharts-text {
+  fill: #9CA3AF !important;
+  font-size: 11px !important;
+}
+
+.recharts-tooltip-wrapper {
+  outline: none !important;
+}
+
+/* ======================== */
+/* ANIMATIONS */
+/* ======================== */
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 200, 5, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(0, 200, 5, 0);
+  }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fade-in 0.2s ease-out;
+}
+
+/* ======================== */
+/* SKELETON LOADERS */
+/* ======================== */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #1D2430 0%,
+    #2D333F 50%,
+    #1D2430 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.skeleton-text {
+  height: 14px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.skeleton-title {
+  height: 20px;
+  width: 60%;
+  margin-bottom: 12px;
+  border-radius: 4px;
+}
+
+.skeleton-card {
+  background-color: #151921;
+  border: 1px solid #2D333F;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-button {
+  height: 40px;
+  width: 120px;
+  border-radius: 8px;
+}
+
+/* ======================== */
+/* RTL HEBREW SUPPORT */
+/* ======================== */
+
+.rtl-text {
+  direction: rtl;
+  text-align: right;
+}
+
+.news-card-rtl {
+  direction: rtl;
+  text-align: right;
+}
+
+.news-card-rtl h3,
+.news-card-rtl p {
+  text-align: right;
+}
+
+/* Live indicator */
+.live-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: rgba(0, 200, 5, 0.15);
+  border: 1px solid rgba(0, 200, 5, 0.3);
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00C805;
+}
+
+.live-indicator::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  background-color: #00C805;
+  border-radius: 50%;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* News source link */
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background-color: #1D2430;
+  border: 1px solid #2D333F;
+  border-radius: 8px;
+  color: #00C805;
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.source-link:hover {
+  background-color: #2D333F;
+  border-color: #00C805;
+}
