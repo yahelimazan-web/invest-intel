@@ -577,6 +577,24 @@ export default function MyProperties() {
         </button>
       </div>
 
+      {/* Save/Delete Message */}
+      {saveMessage && (
+        <div className={`p-4 rounded-lg ${
+          saveMessage.type === "success" 
+            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+            : "bg-red-500/20 text-red-400 border border-red-500/30"
+        }`}>
+          <div className="flex items-center gap-2">
+            {saveMessage.type === "success" ? (
+              <CheckCircle2 className="w-5 h-5" />
+            ) : (
+              <AlertCircle className="w-5 h-5" />
+            )}
+            <span>{saveMessage.text}</span>
+          </div>
+        </div>
+      )}
+
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="card p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-emerald-500/30">
