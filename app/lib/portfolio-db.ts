@@ -322,3 +322,68 @@ function getDefaultFolders(): PropertyFolder[] {
     },
   ];
 }
+
+/**
+ * Load all properties directly from properties table
+ * This syncs with MyProperties page
+ */
+export async function loadUserProperties(userId: string): Promise<SavedProperty[]> {
+  console.log("[Portfolio DB] loadUserProperties called with userId:", userId);
+  
+  if (!supabase || supabase === null) {
+    console.warn("[Portfolio DB] Supabase not initialized. Cannot load properties.");
+    return [];
+  }
+
+  try {
+    // Set user context for RLS
+    try {
+      await supabase.rpc('set_user_context', { user_id_param: userId });
+    } catch (rpcError) {
+      console.warn("[Portfolio DB] set_user_context RPC not available");
+    }
+
+    // Query properties table
+    const { data, error } = await supabase
+      .from("properties")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("[Portfolio DB] Error loading properties:", error);
+      return [];
+    }
+
+    if (!data || data.length === 0) {
+      return [];
+    }
+
+    // Transform property_data JSONB to SavedProperty format
+    const properties: SavedProperty[] = data.map((row: any) => {
+      const propData = row.property_data || {};
+      return {
+        id: row.id,
+        country: propData.country || "UK",
+        postcode: propData.postcode || "",
+        address: propData.address || propData.name || "",
+        energyRating: propData.energyRating || null,
+        propertyType: propData.propertyType || null,
+        floorArea: propData.floorArea || null,
+        lastPrice: propData.currentValue || propData.lastPrice || null,
+        purchasePrice: propData.purchasePrice || null,
+        monthlyRent: propData.monthlyRent || null,
+        status: propData.status || "watching",
+        purchaseDate: propData.purchaseDate || null,
+        addedAt: row.created_at || new Date().toISOString(),
+        notes: propData.notes || null,
+      };
+    });
+
+    console.log("[Portfolio DB] Loaded", properties.length, "properties from properties table");
+    return properties;
+  } catch (error) {
+    console.error("[Portfolio DB] Failed to load properties:", error);
+    return [];
+  }
+}

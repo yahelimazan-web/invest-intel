@@ -28,6 +28,7 @@ import {
   Check,
   RefreshCw,
   LogIn,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "../lib/utils";
@@ -37,11 +38,14 @@ import {
   saveUserFolders, 
   deleteProperty,
   updateProperty,
+  loadUserProperties,
   type PropertyFolder, 
   type SavedProperty,
   type Country
 } from "../lib/portfolio-db";
 import PropertyDocuments from "../components/PropertyDocuments";
+import PropertyDocumentFolders from "../components/PropertyDocumentFolders";
+import AIChat from "../components/AIChat";
 
 // =============================================================================
 // Financial Calculation Constants
@@ -81,6 +85,7 @@ export default function PortfolioPage() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   
   const [folders, setFolders] = useState<PropertyFolder[]>([]);
+  const [properties, setProperties] = useState<SavedProperty[]>([]); // Direct from properties table
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [showNewFolderModal, setShowNewFolderModal] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
@@ -88,6 +93,7 @@ export default function PortfolioPage() {
   const [editingFolder, setEditingFolder] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedProperty, setSelectedProperty] = useState<SavedProperty | null>(null);
+  const [isLoadingProperties, setIsLoadingProperties] = useState(false);
   
   // Edit property state
   const [showEditModal, setShowEditModal] = useState(false);
@@ -102,6 +108,7 @@ export default function PortfolioPage() {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [isAIChatOpen, setIsAIChatOpen] = useState(false);
 
   // Default folders for new users
   const defaultFolders: PropertyFolder[] = [
@@ -139,6 +146,31 @@ export default function PortfolioPage() {
     };
 
     loadFolders();
+  }, [authLoading, user?.id]);
+
+  // Load properties directly from properties table (sync with MyProperties)
+  useEffect(() => {
+    if (authLoading || !user?.id) return;
+    
+    const loadProperties = async () => {
+      setIsLoadingProperties(true);
+      try {
+        const props = await loadUserProperties(user.id);
+        setProperties(props);
+        console.log("[Portfolio] Loaded", props.length, "properties from properties table");
+      } catch (e) {
+        console.error("Failed to load properties from Supabase:", e);
+        setProperties([]);
+      } finally {
+        setIsLoadingProperties(false);
+      }
+    };
+
+    loadProperties();
+    
+    // Refresh every 5 seconds to sync with MyProperties changes
+    const interval = setInterval(loadProperties, 5000);
+    return () => clearInterval(interval);
   }, [authLoading, user?.id]);
 
   // Save folders to Supabase ONLY (debounced)
@@ -1082,11 +1114,11 @@ export default function PortfolioPage() {
                     </button>
                   </div>
 
-                  {/* Documents Section */}
+                  {/* Documents Section with 4 Fixed Folders */}
                   <div className="pt-4 border-t border-slate-700 mt-4">
-                    <PropertyDocuments
+                    <PropertyDocumentFolders
                       propertyId={selectedProperty.id}
-                      folderId={selectedFolderId || ""}
+                      propertyName={selectedProperty.address}
                     />
                   </div>
                 </div>
