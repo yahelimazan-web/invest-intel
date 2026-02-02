@@ -29,6 +29,7 @@ import {
   RefreshCw,
   LogIn,
   Sparkles,
+  MessageCircle,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "../lib/utils";
@@ -70,10 +71,10 @@ const DEFAULT_MORTGAGE_TERM = 25;
 // =============================================================================
 
 const FOLDER_COLORS = [
-  { id: "emerald", bg: "bg-emerald-500/20", text: "text-emerald-400", border: "border-emerald-500/30" },
-  { id: "blue", bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
+  { id: "emerald", bg: "bg-[rgba(0,209,178,0.2)]", text: "text-[#00D1B2]", border: "border-[rgba(0,209,178,0.3)]" },
+  { id: "blue", bg: "bg-[rgba(0,163,255,0.2)]", text: "text-[#00A3FF]", border: "border-[rgba(0,163,255,0.3)]" },
   { id: "purple", bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
-  { id: "amber", bg: "bg-amber-500/20", text: "text-amber-400", border: "border-amber-500/30" },
+  { id: "amber", bg: "bg-[rgba(255,176,32,0.2)]", text: "text-[#FFB020]", border: "border-[rgba(255,176,32,0.3)]" },
   { id: "pink", bg: "bg-pink-500/20", text: "text-pink-400", border: "border-pink-500/30" },
   { id: "cyan", bg: "bg-cyan-500/20", text: "text-cyan-400", border: "border-cyan-500/30" },
 ];
@@ -452,29 +453,23 @@ export default function PortfolioPage() {
   // Show login prompt for unauthenticated users
   if (!authLoading && !isAuthenticated) {
     return (
-      <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-[#0E1116] flex items-center justify-center" dir="rtl">
         <div className="text-center max-w-md px-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-[#00C805]/20 to-[#00A004]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <FolderOpen className="w-10 h-10 text-[#00C805]" />
+          <div className="w-20 h-20 bg-[rgba(0,163,255,0.15)] border border-[rgba(0,163,255,0.3)] rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <FolderOpen className="w-10 h-10 text-[#00A3FF]" />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-4">תיק השקעות פרטי</h1>
-          <p className="text-slate-400 mb-8">
+          <h1 className="text-2xl font-bold text-[#E6EEF3] mb-4">תיק השקעות פרטי</h1>
+          <p className="text-[#9AA6B2] mb-8">
             כדי לשמור נכסים ולנהל את תיק ההשקעות שלך, עליך להתחבר לחשבונך.
             <br />
             הנתונים שלך יישמרו בצורה מאובטחת ונפרדת ממשתמשים אחרים.
           </p>
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#00C805] to-[#00A004] text-white font-semibold rounded-xl hover:from-[#00D806] hover:to-[#00B505] transition-all shadow-lg shadow-[#00C805]/20"
-          >
+          <Link href="/login" className="btn-primary inline-flex items-center gap-2 px-6 py-3">
             <LogIn className="w-5 h-5" />
             התחבר / הירשם
           </Link>
           <div className="mt-6">
-            <Link
-              href="/"
-              className="text-sm text-slate-500 hover:text-slate-300 transition-colors"
-            >
+            <Link href="/" className="text-sm text-[#9AA6B2] hover:text-[#E6EEF3] transition-colors">
               ← חזור לדשבורד
             </Link>
           </div>
@@ -484,24 +479,24 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950" dir="rtl">
+    <div className="min-h-screen bg-[#0E1116]" dir="rtl">
       {/* Header */}
-      <header className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 border-b border-slate-700 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <header className="bg-[#12141A] border-b border-[rgba(255,255,255,0.06)] sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link
                 href="/"
-                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-2 bg-[#17191F] hover:bg-[#12141A] rounded-lg transition-colors border border-[rgba(255,255,255,0.06)]"
               >
-                <ArrowLeft className="w-5 h-5 text-slate-400" />
+                <ArrowLeft className="w-5 h-5 text-[#9AA6B2]" />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                  <FolderOpen className="w-6 h-6 text-emerald-400" />
+                <h1 className="text-3xl font-semibold text-[#E6EEF3] flex items-center gap-3 mb-1">
+                  <FolderOpen className="w-7 h-7 text-[#00A3FF]" />
                   תיק ההשקעות שלי
                 </h1>
-                <p className="text-sm text-slate-400">ניהול נכסים ותיקיות</p>
+                <p className="text-sm text-[#9AA6B2]">ניהול נכסים ותיקיות</p>
               </div>
             </div>
 
@@ -522,42 +517,36 @@ export default function PortfolioPage() {
       </header>
 
       {/* Stats Bar */}
-      <div className="bg-slate-900/50 border-b border-slate-800">
+      <div className="bg-[#12141A] border-b border-[rgba(255,255,255,0.06)]">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="grid grid-cols-3 gap-4">
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/20 rounded-lg">
-                  <FolderOpen className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{folders.length}</p>
-                  <p className="text-xs text-slate-400">תיקיות</p>
-                </div>
+            <div className="stat-card flex flex-row items-center gap-3">
+              <div className="p-2 bg-[rgba(0,163,255,0.15)] border border-[rgba(0,163,255,0.3)] rounded-lg">
+                <FolderOpen className="w-5 h-5 text-[#00A3FF]" />
+              </div>
+              <div>
+                <p className="stat-value">{folders.length}</p>
+                <p className="stat-label">תיקיות</p>
               </div>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/20 rounded-lg">
-                  <Building2 className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">{totalProperties}</p>
-                  <p className="text-xs text-slate-400">נכסים שמורים</p>
-                </div>
+            <div className="stat-card flex flex-row items-center gap-3">
+              <div className="p-2 bg-[rgba(0,163,255,0.15)] rounded-lg">
+                <Building2 className="w-5 h-5 text-[#00A3FF]" />
+              </div>
+              <div>
+                <p className="stat-value">{totalProperties}</p>
+                <p className="stat-label">נכסים שמורים</p>
               </div>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-4 border border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-amber-500/20 rounded-lg">
-                  <PoundSterling className="w-5 h-5 text-amber-400" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-white">
-                    {totalValue > 0 ? `£${(totalValue / 1000).toFixed(0)}K` : "—"}
-                  </p>
-                  <p className="text-xs text-slate-400">שווי משוער</p>
-                </div>
+            <div className="stat-card flex flex-row items-center gap-3">
+              <div className="p-2 bg-[rgba(255,176,32,0.15)] rounded-lg">
+                <PoundSterling className="w-5 h-5 text-[#FFB020]" />
+              </div>
+              <div>
+                <p className="stat-value">
+                  {totalValue > 0 ? `£${(totalValue / 1000).toFixed(0)}K` : "—"}
+                </p>
+                <p className="stat-label">שווי משוער</p>
               </div>
             </div>
           </div>
@@ -565,16 +554,16 @@ export default function PortfolioPage() {
       </div>
 
       {/* Search Bar */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="max-w-7xl mx-auto px-6 py-5">
         <div className="relative">
-          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+          <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#9AA6B2] pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="חיפוש נכסים לפי כתובת, מיקוד או הערות..."
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl py-3 pr-12 pl-4 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
-            style={{ color: 'white' }}
+            className="input w-full pr-12 pl-4"
+            style={{ color: '#E6EEF3' }}
           />
         </div>
       </div>
@@ -585,10 +574,10 @@ export default function PortfolioPage() {
           {/* Folders List */}
           <div className="lg:col-span-2 space-y-4">
             {folders.length === 0 ? (
-              <div className="bg-slate-800/50 rounded-xl p-12 text-center border border-slate-700">
-                <FolderOpen className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">אין תיקיות עדיין</h3>
-                <p className="text-slate-400 mb-4">צור תיקייה חדשה כדי להתחיל לארגן את הנכסים שלך</p>
+              <div className="card p-12 text-center">
+                <FolderOpen className="w-16 h-16 text-[#9AA6B2] mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-[#E6EEF3] mb-2">אין תיקיות עדיין</h3>
+                <p className="text-[#9AA6B2] mb-6">צור תיקייה חדשה כדי להתחיל לארגן את הנכסים שלך</p>
                 <button
                   type="button"
                   onClick={(e) => {
@@ -603,13 +592,13 @@ export default function PortfolioPage() {
                 </button>
               </div>
             ) : (folders.every(f => f.properties.length === 0) && properties.length === 0) ? (
-              <div className="bg-slate-800/50 rounded-xl p-12 text-center border border-slate-700">
-                <Building2 className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-white mb-2">אין נכסים בתיק שלך</h3>
-                <p className="text-slate-400 mb-4">התחל להוסיף נכסים כדי לבנות את תיק ההשקעות שלך</p>
+              <div className="card p-12 text-center">
+                <Building2 className="w-16 h-16 text-[#9AA6B2] mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-[#E6EEF3] mb-2">אין נכסים בתיק שלך</h3>
+                <p className="text-[#9AA6B2] mb-6">התחל להוסיף נכסים כדי לבנות את תיק ההשקעות שלך</p>
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#00C805] to-[#00A004] hover:from-[#00D806] hover:to-[#00B505] text-white font-semibold rounded-xl transition-all shadow-lg shadow-[#00C805]/20 relative z-10"
+                  className="btn-primary inline-flex items-center gap-2 px-6 py-3 relative z-10"
                   style={{ pointerEvents: 'auto' }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -623,8 +612,8 @@ export default function PortfolioPage() {
                 {properties.length > 0 && (
                   <div className="mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-white">נכסים שלי (מ-My Properties)</h3>
-                      <span className="text-sm text-slate-400">{properties.length} נכסים</span>
+                      <h3 className="text-lg font-semibold text-[#E6EEF3]">נכסים שלי (מ-My Properties)</h3>
+                      <span className="text-sm text-[#9AA6B2]">{properties.length} נכסים</span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {properties.map((property) => (
@@ -635,14 +624,14 @@ export default function PortfolioPage() {
                             setSelectedFolderId(null); // Properties from table don't have folder
                             cancelInlineEdit();
                           }}
-                          className="bg-slate-800/50 rounded-xl border border-slate-700 p-4 hover:border-[#00C805]/50 transition-all cursor-pointer"
+                          className="property-card"
                         >
-                          <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-start justify-between mb-3">
                             <div className="flex-1">
-                              <p className="font-semibold text-white">{property.address}</p>
-                              <p className="text-sm text-slate-400 mt-1">{property.postcode}</p>
+                              <p className="font-semibold text-[#E6EEF3] text-lg mb-1">{property.address}</p>
+                              <p className="text-sm text-[#9AA6B2]">{property.postcode}</p>
                             </div>
-                            <span className="text-xl">
+                            <span className="text-xl ml-2">
                               {property.country === "UK" ? "🇬🇧" : 
                                property.country === "Israel" ? "🇮🇱" :
                                property.country === "USA" ? "🇺🇸" :
@@ -651,14 +640,14 @@ export default function PortfolioPage() {
                                property.country === "Portugal" ? "🇵🇹" : "🇬🇪"}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700">
+                          <div className="flex items-center justify-between pt-3 border-t border-[rgba(255,255,255,0.06)]">
                             {property.purchasePrice && (
-                              <span className="text-[#00C805] font-semibold">
+                              <span className="text-[#00A3FF] font-semibold text-lg">
                                 {formatCurrencyCompact(property.purchasePrice, property.country || "UK")}
                               </span>
                             )}
                             {property.monthlyRent && (
-                              <span className="text-slate-300 text-sm">
+                              <span className="text-[#9AA6B2] text-sm">
                                 שכירות: {formatCurrencyCompact(property.monthlyRent, property.country || "UK")}/חודש
                               </span>
                             )}
@@ -678,10 +667,7 @@ export default function PortfolioPage() {
                 return (
                   <div
                     key={folder.id}
-                    className={cn(
-                      "bg-slate-800/50 rounded-xl border transition-all",
-                      colorClasses.border
-                    )}
+                    className="card"
                   >
                     {/* Folder Header */}
                     <button
@@ -691,22 +677,22 @@ export default function PortfolioPage() {
                         e.preventDefault();
                         toggleFolder(folder.id);
                       }}
-                      className="w-full p-4 flex items-center justify-between hover:bg-slate-700/30 transition-colors rounded-t-xl relative z-10"
+                      className="w-full p-4 flex items-center justify-between hover:bg-[#17191F] transition-colors rounded-t-xl relative z-10"
                       style={{ pointerEvents: 'auto' }}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={cn("p-2 rounded-lg", colorClasses.bg)}>
+                        <div className={cn("p-2 rounded-lg bg-[rgba(0,163,255,0.15)] border border-[rgba(0,163,255,0.3)]")}>
                           {folder.icon === "heart" ? (
-                            <Heart className={cn("w-5 h-5", colorClasses.text)} />
+                            <Heart className="w-5 h-5 text-[#00A3FF]" />
                           ) : folder.icon === "star" ? (
-                            <Star className={cn("w-5 h-5", colorClasses.text)} />
+                            <Star className="w-5 h-5 text-[#FFB020]" />
                           ) : (
-                            <FolderOpen className={cn("w-5 h-5", colorClasses.text)} />
+                            <FolderOpen className="w-5 h-5 text-[#00A3FF]" />
                           )}
                         </div>
                         <div className="text-right">
-                          <h3 className="font-semibold text-white">{folder.name}</h3>
-                          <p className="text-xs text-slate-400">{folder.properties.length} נכסים</p>
+                          <h3 className="font-semibold text-[#E6EEF3]">{folder.name}</h3>
+                          <p className="text-xs text-[#9AA6B2]">{folder.properties.length} נכסים</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -717,29 +703,29 @@ export default function PortfolioPage() {
                               e.stopPropagation();
                               deleteFolder(folder.id);
                             }}
-                            className="p-2 text-slate-500 hover:text-red-400 transition-colors"
+                            className="p-2 text-[#9AA6B2] hover:text-[#FF4D4F] transition-colors"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         )}
                         {isExpanded ? (
-                          <ChevronDown className="w-5 h-5 text-slate-400" />
+                          <ChevronDown className="w-5 h-5 text-[#9AA6B2]" />
                         ) : (
-                          <ChevronRight className="w-5 h-5 text-slate-400" />
+                          <ChevronRight className="w-5 h-5 text-[#9AA6B2]" />
                         )}
                       </div>
                     </button>
 
                     {/* Folder Content */}
                     {isExpanded && (
-                      <div className="border-t border-slate-700">
+                      <div className="border-t border-[rgba(255,255,255,0.06)]">
                         {filteredProps.length === 0 ? (
-                          <div className="p-6 text-center text-slate-500">
+                          <div className="p-6 text-center text-[#9AA6B2]">
                             <Home className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p className="mb-3">אין נכסים בתיקייה זו</p>
                             <Link
                               href="/"
-                              className="inline-flex items-center gap-2 px-4 py-2 bg-[#00C805]/20 hover:bg-[#00C805]/30 text-[#00C805] rounded-lg transition-colors text-sm font-medium relative z-10"
+                              className="btn-secondary inline-flex items-center gap-2 px-4 py-2 text-sm font-medium relative z-10"
                               style={{ pointerEvents: 'auto' }}
                               onClick={(e) => e.stopPropagation()}
                             >
@@ -748,11 +734,11 @@ export default function PortfolioPage() {
                             </Link>
                           </div>
                         ) : (
-                          <div className="divide-y divide-slate-700/50">
+                          <div className="divide-y divide-[rgba(255,255,255,0.06)]">
                             {filteredProps.map((property) => (
                               <div
                                 key={property.id}
-                                className="p-4 hover:bg-slate-700/30 transition-colors relative group"
+                                className="p-4 hover:bg-[#17191F] transition-colors relative group"
                               >
                                 <div 
                                   className="flex items-start justify-between cursor-pointer"
@@ -763,8 +749,8 @@ export default function PortfolioPage() {
                                   }}
                                 >
                                   <div className="flex-1">
-                                    <p className="font-medium text-white">{property.address}</p>
-                                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-400">
+                                    <p className="font-medium text-[#E6EEF3]">{property.address}</p>
+                                    <div className="flex items-center gap-3 mt-1 text-xs text-[#9AA6B2]">
                                       <span className="flex items-center gap-1">
                                         <MapPin className="w-3 h-3" />
                                         {property.postcode}
@@ -782,7 +768,7 @@ export default function PortfolioPage() {
                                   </div>
                                   <div className="flex items-center gap-2">
                                     {property.lastPrice && (
-                                      <span className="text-[#00C805] font-semibold">
+                                      <span className="text-[#00A3FF] font-semibold">
                                         {formatCurrencyCompact(property.lastPrice, property.country || "UK")}
                                       </span>
                                     )}
@@ -790,7 +776,7 @@ export default function PortfolioPage() {
                                 </div>
                                 {/* Action buttons - separate from clickable area */}
                                 <div 
-                                  className="flex items-center gap-2 mt-2 pt-2 border-t border-slate-700/50"
+                                  className="flex items-center gap-2 mt-3 pt-3 border-t border-[rgba(255,255,255,0.06)]"
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   <button
@@ -803,7 +789,7 @@ export default function PortfolioPage() {
                                       setSelectedFolderId(folder.id);
                                       openEditModal(folder.id, property);
                                     }}
-                                    className="flex-1 flex items-center justify-center gap-2 px-3 py-1.5 text-sm text-[#00C805] hover:text-[#00E806] bg-[#00C805]/10 hover:bg-[#00C805]/20 rounded transition-colors relative z-20"
+                                    className="btn-secondary flex-1 flex items-center justify-center gap-2 px-3 py-2 text-sm relative z-20"
                                     style={{ pointerEvents: 'auto', position: 'relative' }}
                                     title="ערוך נכס"
                                   >
@@ -819,7 +805,7 @@ export default function PortfolioPage() {
                                         await handleDeleteProperty(folder.id, property.id);
                                       }
                                     }}
-                                    className="px-3 py-1.5 text-sm text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors relative z-20"
+                                    className="px-3 py-2 text-sm text-[#9AA6B2] hover:text-[#FF4D4F] hover:bg-[rgba(255,77,79,0.1)] rounded-lg transition-colors relative z-20 border border-[rgba(255,255,255,0.06)]"
                                     style={{ pointerEvents: 'auto', position: 'relative' }}
                                     title="מחק נכס"
                                   >
@@ -834,7 +820,8 @@ export default function PortfolioPage() {
                     )}
                   </div>
                 );
-              })
+              })}
+              </>
             )}
           </div>
 
@@ -842,27 +829,27 @@ export default function PortfolioPage() {
           <div className="lg:col-span-1">
             {selectedProperty ? (
               <div 
-                className="bg-slate-800/50 rounded-xl border border-slate-700 sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto"
+                className="card sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto"
                 style={{ position: 'relative', zIndex: 10 }}
               >
-                <div className="p-4 border-b border-[#2D333F] sticky top-0 bg-[#151921]/95 backdrop-blur z-10">
+                <div className="p-5 border-b border-[rgba(255,255,255,0.06)] sticky top-0 bg-[#12141A] backdrop-blur z-10">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-white flex items-center gap-2">
+                    <h3 className="font-semibold text-[#E6EEF3] text-lg flex items-center gap-2">
                       פרטי נכס
                       {inlineEditing.field && (
-                        <span className="flex items-center gap-1 text-xs text-[#00C805] bg-[#00C805]/20 px-2 py-0.5 rounded-full">
+                        <span className="badge badge-info flex items-center gap-1 text-xs">
                           <Edit3 className="w-3 h-3" />
                           מצב עריכה
                         </span>
                       )}
                       {saveSuccess && (
-                        <span className="flex items-center gap-1 text-xs text-[#00C805] bg-[#00C805]/20 px-2 py-0.5 rounded-full">
+                        <span className="badge badge-success flex items-center gap-1 text-xs">
                           <Check className="w-3 h-3" />
                           נשמר בהצלחה!
                         </span>
                       )}
                       {isSaving && (
-                        <RefreshCw className="w-3 h-3 text-slate-400 animate-spin" />
+                        <RefreshCw className="w-3 h-3 text-[#9AA6B2] animate-spin" />
                       )}
                     </h3>
                     <button
@@ -871,7 +858,7 @@ export default function PortfolioPage() {
                         setSelectedProperty(null);
                         cancelInlineEdit();
                       }}
-                      className="p-1 text-slate-400 hover:text-white"
+                      className="p-1 text-[#9AA6B2] hover:text-[#E6EEF3]"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -882,21 +869,21 @@ export default function PortfolioPage() {
                   style={{ position: 'relative', zIndex: 1 }}
                 >
                   <div>
-                    <p className="text-lg font-medium text-white">{selectedProperty.address}</p>
-                    <p className="text-sm text-slate-400">{selectedProperty.postcode}</p>
+                    <p className="text-lg font-semibold text-[#E6EEF3] mb-1">{selectedProperty.address}</p>
+                    <p className="text-sm text-[#9AA6B2]">{selectedProperty.postcode}</p>
                   </div>
 
                   {/* Editable Financial Fields */}
                   <div className="space-y-3">
                     {/* Purchase Price - Editable */}
                     <div className={cn(
-                      "rounded-lg p-3 transition-all",
+                      "rounded-lg p-4 transition-all",
                       inlineEditing.field === "purchasePrice" 
-                        ? "bg-[#1D2430] border-2 border-[#00C805]" 
-                        : "bg-slate-700/50 border border-transparent"
+                        ? "bg-[#17191F] border-2 border-[#00A3FF]" 
+                        : "bg-[#17191F] border border-[rgba(255,255,255,0.06)]"
                     )}>
-                      <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs text-slate-400">מחיר רכישה</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs text-[#9AA6B2] font-medium">מחיר רכישה</p>
                         {inlineEditing.field !== "purchasePrice" && (
                           <button
                             type="button"
@@ -904,7 +891,7 @@ export default function PortfolioPage() {
                               e.stopPropagation();
                               startInlineEdit("purchasePrice", selectedProperty.purchasePrice || selectedProperty.lastPrice);
                             }}
-                            className="text-xs text-[#00C805] hover:text-[#00E806] flex items-center gap-1 font-medium"
+                            className="text-xs text-[#00A3FF] hover:text-[#0090E6] flex items-center gap-1 font-medium transition-colors"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <Edit3 className="w-3 h-3" />
@@ -923,15 +910,15 @@ export default function PortfolioPage() {
                               if (e.key === "Enter") saveInlineEdit();
                               if (e.key === "Escape") cancelInlineEdit();
                             }}
-                            className="flex-1 bg-[#0B0E14] border-2 border-[#00C805] rounded-lg px-3 py-2 text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#00C805]/50"
-                            style={{ color: 'white', pointerEvents: 'auto' }}
+                            className="flex-1 bg-[#0E1116] border-2 border-[#00A3FF] rounded-lg px-3 py-2 text-[#E6EEF3] text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-[#00A3FF]/30"
+                            style={{ pointerEvents: 'auto' }}
                             autoFocus
                             placeholder="הזן מחיר"
                           />
                           <button
                             type="button"
                             onClick={saveInlineEdit}
-                            className="p-2 bg-[#00C805] hover:bg-[#00E806] text-white rounded-lg font-medium"
+                            className="p-2 bg-[#00A3FF] hover:bg-[#0090E6] text-white rounded-lg font-medium transition-colors"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <Check className="w-4 h-4" />
@@ -939,14 +926,14 @@ export default function PortfolioPage() {
                           <button
                             type="button"
                             onClick={cancelInlineEdit}
-                            className="p-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg"
+                            className="btn-secondary p-2"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <p className="text-xl font-bold text-[#00C805]">
+                        <p className="text-2xl font-semibold text-[#00A3FF]">
                           {formatCurrency(selectedProperty.purchasePrice || selectedProperty.lastPrice || 0, selectedProperty.country || "UK")}
                         </p>
                       )}
@@ -956,11 +943,11 @@ export default function PortfolioPage() {
                     <div className={cn(
                       "rounded-lg p-3 transition-all",
                       inlineEditing.field === "monthlyRent" 
-                        ? "bg-[#1D2430] border-2 border-[#00C805]" 
-                        : "bg-slate-700/50 border border-transparent"
+                        ? "bg-[#17191F] border-2 border-[#00A3FF]" 
+                        : "bg-[#17191F] border border-[rgba(255,255,255,0.06)]"
                     )}>
                       <div className="flex items-center justify-between mb-1">
-                        <p className="text-xs text-slate-400">שכירות חודשית</p>
+                        <p className="text-xs text-[#9AA6B2]">שכירות חודשית</p>
                         {inlineEditing.field !== "monthlyRent" && (
                           <button
                             type="button"
@@ -968,7 +955,7 @@ export default function PortfolioPage() {
                               e.stopPropagation();
                               startInlineEdit("monthlyRent", selectedProperty.monthlyRent);
                             }}
-                            className="text-xs text-[#00C805] hover:text-[#00E806] flex items-center gap-1 font-medium"
+                            className="text-xs text-[#00A3FF] hover:text-[#0090E6] flex items-center gap-1 font-medium"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <Edit3 className="w-3 h-3" />
@@ -978,7 +965,7 @@ export default function PortfolioPage() {
                       </div>
                       {inlineEditing.field === "monthlyRent" ? (
                         <div className="flex items-center gap-2 relative z-50">
-                          <span className="text-lg text-white font-bold">£</span>
+                          <span className="text-lg text-[#E6EEF3] font-bold">£</span>
                           <input
                             type="number"
                             value={inlineEditing.value}
@@ -987,15 +974,15 @@ export default function PortfolioPage() {
                               if (e.key === "Enter") saveInlineEdit();
                               if (e.key === "Escape") cancelInlineEdit();
                             }}
-                            className="flex-1 bg-[#0B0E14] border-2 border-[#00C805] rounded-lg px-3 py-2 text-white text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#00C805]/50"
-                            style={{ color: 'white', pointerEvents: 'auto' }}
+                            className="flex-1 bg-[#0E1116] border-2 border-[#00A3FF] rounded-lg px-3 py-2 text-[#E6EEF3] text-lg font-bold focus:outline-none focus:ring-2 focus:ring-[#00A3FF]/30"
+                            style={{ pointerEvents: 'auto' }}
                             autoFocus
                             placeholder="הזן שכירות"
                           />
                           <button
                             type="button"
                             onClick={saveInlineEdit}
-                            className="p-2 bg-[#00C805] hover:bg-[#00E806] text-white rounded-lg font-medium"
+                            className="p-2 bg-[#00A3FF] hover:bg-[#0090E6] text-white rounded-lg font-medium"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <Check className="w-4 h-4" />
@@ -1003,14 +990,14 @@ export default function PortfolioPage() {
                           <button
                             type="button"
                             onClick={cancelInlineEdit}
-                            className="p-2 bg-slate-600 hover:bg-slate-500 text-white rounded-lg"
+                            className="btn-secondary p-2"
                             style={{ pointerEvents: 'auto' }}
                           >
                             <X className="w-4 h-4" />
                           </button>
                         </div>
                       ) : (
-                        <p className="text-xl font-bold text-white">
+                        <p className="text-xl font-bold text-[#E6EEF3]">
                           {formatCurrency(selectedProperty.monthlyRent || 0, selectedProperty.country || "UK")}/month
                         </p>
                       )}
@@ -1020,17 +1007,17 @@ export default function PortfolioPage() {
                   {/* Property Info */}
                   <div className="grid grid-cols-2 gap-3">
                     {selectedProperty.energyRating && (
-                      <div className="bg-slate-700/50 rounded-lg p-3">
-                        <p className="text-xs text-slate-400">דירוג אנרגטי</p>
-                        <p className="text-lg font-bold text-emerald-400">
+                      <div className="bg-[#17191F] rounded-lg p-3 border border-[rgba(255,255,255,0.06)]">
+                        <p className="text-xs text-[#9AA6B2]">דירוג אנרגטי</p>
+                        <p className="text-lg font-bold text-[#00D1B2]">
                           {selectedProperty.energyRating}
                         </p>
                       </div>
                     )}
                     {selectedProperty.floorArea && (
-                      <div className="bg-slate-700/50 rounded-lg p-3">
-                        <p className="text-xs text-slate-400">שטח</p>
-                        <p className="text-lg font-bold text-white">
+                      <div className="bg-[#17191F] rounded-lg p-3 border border-[rgba(255,255,255,0.06)]">
+                        <p className="text-xs text-[#9AA6B2]">שטח</p>
+                        <p className="text-lg font-bold text-[#E6EEF3]">
                           {selectedProperty.floorArea} מ״ר
                         </p>
                       </div>
@@ -1039,34 +1026,34 @@ export default function PortfolioPage() {
 
                   {/* Financial Metrics - Auto-calculated */}
                   {financialMetrics && financialMetrics.monthlyRent > 0 && (
-                    <div className="pt-4 border-t border-slate-700 space-y-3">
+                    <div className="pt-4 border-t border-[rgba(255,255,255,0.06)] space-y-3">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium text-white flex items-center gap-2">
                           <Calculator className="w-4 h-4 text-cyan-400" />
                           חישוב תשואה
                         </h4>
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-[#9AA6B2]">
                           ריבית: {financialMetrics.mortgageRate}% (BoE: {financialMetrics.baseRate}%)
                         </span>
                       </div>
 
                       <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-gradient-to-br from-[#00C805]/20 to-[#00A004]/10 rounded-lg p-3 border border-[#00C805]/30">
-                          <p className="text-xs text-slate-400">תשואה ברוטו</p>
-                          <p className="text-xl font-bold text-[#00C805]">
+                        <div className="bg-[rgba(0,163,255,0.1)] rounded-lg p-3 border border-[rgba(0,163,255,0.3)]">
+                          <p className="text-xs text-[#9AA6B2]">תשואה ברוטו</p>
+                          <p className="text-xl font-bold text-[#00A3FF]">
                             {financialMetrics.grossYield.toFixed(1)}%
                           </p>
                         </div>
                         <div className={cn(
                           "rounded-lg p-3 border",
                           financialMetrics.netYield >= 0 
-                            ? "bg-gradient-to-br from-cyan-500/20 to-cyan-600/10 border-cyan-500/30"
-                            : "bg-gradient-to-br from-red-500/20 to-red-600/10 border-red-500/30"
+                            ? "bg-[rgba(0,163,255,0.1)] border-[rgba(0,163,255,0.3)]"
+                            : "bg-red-500/10 border-red-500/30"
                         )}>
-                          <p className="text-xs text-slate-400">תשואה נטו</p>
+                          <p className="text-xs text-[#9AA6B2]">תשואה נטו</p>
                           <p className={cn(
                             "text-xl font-bold",
-                            financialMetrics.netYield >= 0 ? "text-cyan-400" : "text-red-400"
+                            financialMetrics.netYield >= 0 ? "text-[#00A3FF]" : "text-red-400"
                           )}>
                             {financialMetrics.netYield.toFixed(1)}%
                           </p>
@@ -1076,38 +1063,38 @@ export default function PortfolioPage() {
                       <div className={cn(
                         "rounded-lg p-3 border",
                         financialMetrics.monthlyCashflow >= 0 
-                          ? "bg-emerald-500/10 border-emerald-500/30"
+                          ? "bg-[rgba(0,209,178,0.1)] border-[rgba(0,209,178,0.3)]"
                           : "bg-red-500/10 border-red-500/30"
                       )}>
                         <div className="flex items-center justify-between">
-                          <p className="text-xs text-slate-400">תזרים חודשי</p>
+                          <p className="text-xs text-[#9AA6B2]">תזרים חודשי</p>
                           <p className={cn(
                             "text-lg font-bold",
-                            financialMetrics.monthlyCashflow >= 0 ? "text-emerald-400" : "text-red-400"
+                            financialMetrics.monthlyCashflow >= 0 ? "text-[#00D1B2]" : "text-red-400"
                           )}>
                             {financialMetrics.monthlyCashflow >= 0 ? "+" : ""}£{Math.round(financialMetrics.monthlyCashflow).toLocaleString()}
                           </p>
                         </div>
                       </div>
 
-                      <div className="bg-slate-700/30 rounded-lg p-3 space-y-2 text-sm">
-                        <div className="flex justify-between text-slate-400">
+                      <div className="bg-[#17191F] rounded-lg p-3 space-y-2 text-sm border border-[rgba(255,255,255,0.06)]">
+                        <div className="flex justify-between text-[#9AA6B2]">
                           <span>משכנתא חודשית</span>
                           <span>{formatCurrency(Math.round(financialMetrics.monthlyMortgage), selectedProperty.country || "UK")}</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-[#9AA6B2]">
                           <span>הון עצמי ({DEFAULT_DEPOSIT_PERCENT}%)</span>
                           <span>{formatCurrency(Math.round(financialMetrics.deposit), selectedProperty.country || "UK")}</span>
                         </div>
-                        <div className="flex justify-between text-slate-400">
+                        <div className="flex justify-between text-[#9AA6B2]">
                           <span>Cash-on-Cash Return</span>
-                          <span className={financialMetrics.cashOnCash >= 0 ? "text-emerald-400" : "text-red-400"}>
+                          <span className={financialMetrics.cashOnCash >= 0 ? "text-[#00D1B2]" : "text-red-400"}>
                             {financialMetrics.cashOnCash.toFixed(1)}%
                           </span>
                         </div>
                       </div>
 
-                      <p className="text-xs text-slate-500 text-center">
+                      <p className="text-xs text-[#9AA6B2] text-center">
                         * חישוב מבוסס על ריבית {selectedProperty.country ? getInterestRateConfig(selectedProperty.country).centralBank : "Bank of England"} {financialMetrics.baseRate}% + מרווח {financialMetrics.mortgageRate - financialMetrics.baseRate}%
                       </p>
                     </div>
@@ -1115,7 +1102,7 @@ export default function PortfolioPage() {
 
                   {/* Action Buttons */}
                   <div 
-                    className="pt-4 border-t border-slate-700 space-y-2"
+                    className="pt-4 border-t border-[rgba(255,255,255,0.06)] space-y-2"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <Link
@@ -1154,7 +1141,7 @@ export default function PortfolioPage() {
                           alert("לא ניתן למצוא את התיקייה של הנכס. נסה לבחור את הנכס מהרשימה.");
                         }
                       }}
-                      className="w-full py-2 bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-slate-300 hover:text-white rounded-lg transition-colors flex items-center justify-center gap-2 relative z-20"
+                      className="btn-secondary w-full py-2 flex items-center justify-center gap-2 relative z-20"
                       style={{ 
                         pointerEvents: 'auto', 
                         position: 'relative',
@@ -1169,7 +1156,7 @@ export default function PortfolioPage() {
                   </div>
 
                   {/* Documents Section with 4 Fixed Folders */}
-                  <div className="pt-4 border-t border-slate-700 mt-4">
+                  <div className="pt-4 border-t border-[rgba(255,255,255,0.06)] mt-4">
                     <PropertyDocumentFolders
                       propertyId={selectedProperty.id}
                       propertyName={selectedProperty.address}
@@ -1178,9 +1165,9 @@ export default function PortfolioPage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-slate-800/30 rounded-xl border border-dashed border-slate-700 p-8 text-center sticky top-24">
-                <Building2 className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400">בחר נכס לצפייה בפרטים</p>
+              <div className="panel rounded-xl border border-dashed border-[rgba(255,255,255,0.12)] p-8 text-center sticky top-24">
+                <Building2 className="w-12 h-12 text-[#9AA6B2] mx-auto mb-3" />
+                <p className="text-[#9AA6B2]">בחר נכס לצפייה בפרטים</p>
               </div>
             )}
           </div>
@@ -1190,20 +1177,20 @@ export default function PortfolioPage() {
       {/* New Folder Modal */}
       {showNewFolderModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-md">
-            <div className="p-4 border-b border-slate-700 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white">תיקייה חדשה</h3>
+          <div className="card rounded-2xl w-full max-w-md">
+            <div className="p-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-[#E6EEF3]">תיקייה חדשה</h3>
               <button
                 type="button"
                 onClick={() => setShowNewFolderModal(false)}
-                className="p-2 text-slate-400 hover:text-white"
+                className="p-2 text-[#9AA6B2] hover:text-[#E6EEF3]"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               <div>
-                <label className="text-sm text-slate-400 block mb-2">שם התיקייה</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">שם התיקייה</label>
                 <input
                   type="text"
                   value={newFolderName}
@@ -1215,7 +1202,7 @@ export default function PortfolioPage() {
                 />
               </div>
               <div>
-                <label className="text-sm text-slate-400 block mb-2">צבע</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">צבע</label>
                 <div className="flex gap-2">
                   {FOLDER_COLORS.map((color) => (
                     <button
@@ -1226,7 +1213,7 @@ export default function PortfolioPage() {
                         "w-10 h-10 rounded-lg transition-all",
                         color.bg,
                         newFolderColor === color.id
-                          ? "ring-2 ring-white ring-offset-2 ring-offset-slate-800"
+                          ? "ring-2 ring-white ring-offset-2 ring-offset-[#12141A]"
                           : ""
                       )}
                     />
@@ -1234,11 +1221,11 @@ export default function PortfolioPage() {
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-slate-700 flex gap-3">
+            <div className="p-4 border-t border-[rgba(255,255,255,0.06)] flex gap-3">
               <button
                 type="button"
                 onClick={() => setShowNewFolderModal(false)}
-                className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                className="flex-1 btn-secondary py-2"
               >
                 ביטול
               </button>
@@ -1258,10 +1245,10 @@ export default function PortfolioPage() {
       {/* Edit Property Modal */}
       {showEditModal && editingProperty && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-slate-800 rounded-2xl border border-slate-700 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="p-4 border-b border-slate-700 flex items-center justify-between sticky top-0 bg-slate-800">
-              <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                <Edit3 className="w-5 h-5 text-blue-400" />
+          <div className="card rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between sticky top-0 bg-[#12141A]">
+              <h3 className="text-lg font-semibold text-[#E6EEF3] flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-[#00A3FF]" />
                 עריכת נכס
               </h3>
               <button
@@ -1270,7 +1257,7 @@ export default function PortfolioPage() {
                   setShowEditModal(false);
                   setEditingProperty(null);
                 }}
-                className="p-2 text-slate-400 hover:text-white"
+                className="p-2 text-[#9AA6B2] hover:text-[#E6EEF3]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1279,14 +1266,14 @@ export default function PortfolioPage() {
             <div className="p-4 space-y-4">
               {/* Address (read-only) */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">כתובת</label>
-                <p className="text-white font-medium">{editingProperty.address}</p>
-                <p className="text-sm text-slate-500">{editingProperty.postcode}</p>
+                <label className="text-sm text-[#9AA6B2] block mb-2">כתובת</label>
+                <p className="text-[#E6EEF3] font-medium">{editingProperty.address}</p>
+                <p className="text-sm text-[#9AA6B2]">{editingProperty.postcode}</p>
               </div>
 
               {/* Purchase Price */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">מחיר רכישה (£)</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">מחיר רכישה (£)</label>
                 <input
                   type="number"
                   value={editingProperty.purchasePrice || ""}
@@ -1318,7 +1305,7 @@ export default function PortfolioPage() {
 
               {/* Monthly Rent */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">שכירות חודשית (£)</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">שכירות חודשית (£)</label>
                 <input
                   type="number"
                   value={editingProperty.monthlyRent || ""}
@@ -1334,7 +1321,7 @@ export default function PortfolioPage() {
 
               {/* Status */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">סטטוס</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">סטטוס</label>
                 <select
                   value={editingProperty.status || "watching"}
                   onChange={(e) => setEditingProperty({
@@ -1352,7 +1339,7 @@ export default function PortfolioPage() {
 
               {/* Purchase Date */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">תאריך רכישה</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">תאריך רכישה</label>
                 <input
                   type="date"
                   value={editingProperty.purchaseDate || ""}
@@ -1367,7 +1354,7 @@ export default function PortfolioPage() {
 
               {/* Floor Area */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">שטח (מ״ר)</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">שטח (מ״ר)</label>
                 <input
                   type="number"
                   value={editingProperty.floorArea || ""}
@@ -1383,7 +1370,7 @@ export default function PortfolioPage() {
 
               {/* Notes */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">הערות</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">הערות</label>
                 <textarea
                   value={editingProperty.notes || ""}
                   onChange={(e) => setEditingProperty({
@@ -1432,12 +1419,23 @@ export default function PortfolioPage() {
         />
       )}
 
-      {/* AI Chat Toggle Button */}
-      {selectedProperty && !isAIChatOpen && (
+      {/* AI Chat - Floating */}
+      {selectedProperty && (
+        <AIChat
+          propertyData={null}
+          propertyId={selectedProperty.id}
+          financialData={null}
+          isOpen={isAIChatOpen}
+          onClose={() => setIsAIChatOpen(false)}
+        />
+      )}
+
+      {/* AI Chat Toggle Button - Property Specific */}
+      {selectedProperty && !isAIChatOpen && !isChatInterfaceOpen && (
         <button
           type="button"
           onClick={() => setIsAIChatOpen(true)}
-          className="fixed bottom-6 left-6 w-14 h-14 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white rounded-full shadow-lg shadow-purple-500/50 flex items-center justify-center transition-all z-50"
+          className="fixed bottom-6 left-6 w-14 h-14 bg-[#00A3FF] hover:bg-[#0090E6] text-white rounded-full shadow-lg shadow-[#00A3FF]/30 flex items-center justify-center transition-all z-50"
           style={{ pointerEvents: 'auto' }}
           title="שאל את ה-AI על הנכס"
         >
@@ -1451,9 +1449,17 @@ export default function PortfolioPage() {
         onClose={() => setIsChatInterfaceOpen(false)}
       />
 
-      {/* Chat Interface Toggle Button */}
-      {!isChatInterfaceOpen && (
-        <ChatToggleButton onClick={() => setIsChatInterfaceOpen(true)} />
+      {/* Chat Interface Toggle Button - Portfolio Wide */}
+      {!isChatInterfaceOpen && !isAIChatOpen && (
+        <button
+          type="button"
+          onClick={() => setIsChatInterfaceOpen(true)}
+          className="fixed bottom-6 left-24 w-14 h-14 bg-[#00A3FF] hover:bg-[#0090E6] rounded-full shadow-lg shadow-[#00A3FF]/30 transition-all hover:scale-105 z-50 flex items-center justify-center"
+          style={{ pointerEvents: 'auto' }}
+          title="פתח צ'אט AI לתיק ההשקעות"
+        >
+          <MessageCircle className="w-6 h-6 text-white" />
+        </button>
       )}
     </div>
   );

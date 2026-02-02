@@ -124,20 +124,20 @@ function PropertyDetail({
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-[#12141A] border border-[rgba(255,255,255,0.06)] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-800">
+        <div className="flex items-center justify-between p-6 border-b border-[rgba(255,255,255,0.06)] bg-[#17191F]">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center text-xl">
+            <div className="w-12 h-12 bg-[rgba(0,209,178,0.2)] border border-[rgba(0,209,178,0.3)] rounded-xl flex items-center justify-center text-xl">
               {asset.country === "uk" ? "🇬🇧" : "🇨🇾"}
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">{asset.name}</h2>
-              <p className="text-sm text-slate-400">{asset.address}</p>
+              <h2 className="text-xl font-bold text-[#E6EEF3]">{asset.name}</h2>
+              <p className="text-sm text-[#9AA6B2]">{asset.address}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <div className="flex bg-slate-800 rounded-lg p-1">
+            <div className="flex bg-[#17191F] rounded-lg p-1 border border-[rgba(255,255,255,0.06)]">
               {(["GBP", "EUR", "ILS"] as CurrencyCode[]).map((curr) => (
                 <button
                   key={curr}
@@ -145,8 +145,8 @@ function PropertyDetail({
                   className={cn(
                     "px-2 py-1 rounded text-xs font-medium transition-all",
                     displayCurrency === curr
-                      ? "bg-emerald-500 text-white"
-                      : "text-slate-400 hover:text-white"
+                      ? "bg-[#00A3FF] text-white"
+                      : "text-[#9AA6B2] hover:text-[#E6EEF3]"
                   )}
                 >
                   {curr}
@@ -155,7 +155,7 @@ function PropertyDetail({
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white"
+              className="p-2 hover:bg-[#17191F] rounded-lg text-[#9AA6B2] hover:text-[#E6EEF3]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -166,9 +166,9 @@ function PropertyDetail({
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-slate-800/50 rounded-xl p-3">
-              <p className="text-xs text-slate-400 mb-1">שווי נוכחי</p>
-              <p className="text-lg font-bold text-white">
+            <div className="stat-card">
+              <p className="stat-label mb-1">שווי נוכחי</p>
+              <p className="stat-value text-lg">
                 {formatCurrency(
                   convertCurrency(asset.currentValue, asset.currency, displayCurrency),
                   displayCurrency
@@ -177,21 +177,21 @@ function PropertyDetail({
               <p
                 className={cn(
                   "text-xs font-medium mt-1",
-                  gainPercent >= 0 ? "text-emerald-400" : "text-red-400"
+                  gainPercent >= 0 ? "text-[#00D1B2]" : "text-red-400"
                 )}
               >
                 {formatPercent(gainPercent)} מרכישה
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-3">
-              <p className="text-xs text-slate-400 mb-1">שכירות חודשית</p>
-              <p className="text-lg font-bold text-white">
+            <div className="stat-card">
+              <p className="stat-label mb-1">שכירות חודשית</p>
+              <p className="stat-value text-lg">
                 {formatCurrency(
                   convertCurrency(asset.monthlyRent, asset.currency, displayCurrency),
                   displayCurrency
                 )}
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-[#9AA6B2] mt-1">
                 {formatCurrency(
                   convertCurrency(asset.monthlyRent * 12, asset.currency, displayCurrency),
                   displayCurrency
@@ -199,35 +199,35 @@ function PropertyDetail({
                 / שנה
               </p>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-3">
-              <p className="text-xs text-slate-400 mb-1">תשואה נטו</p>
-              <p className="text-lg font-bold text-emerald-400">{netYield.toFixed(1)}%</p>
-              <p className="text-xs text-slate-500 mt-1">{grossYield.toFixed(1)}% ברוטו</p>
+            <div className="stat-card">
+              <p className="stat-label mb-1">תשואה נטו</p>
+              <p className="text-lg font-bold text-[#00D1B2]">{netYield.toFixed(1)}%</p>
+              <p className="text-xs text-[#9AA6B2] mt-1">{grossYield.toFixed(1)}% ברוטו</p>
             </div>
-            <div className="bg-slate-800/50 rounded-xl p-3">
-              <p className="text-xs text-slate-400 mb-1">ROI כולל</p>
+            <div className="stat-card">
+              <p className="stat-label mb-1">ROI כולל</p>
               <p
                 className={cn(
                   "text-lg font-bold",
-                  roi >= 0 ? "text-emerald-400" : "text-red-400"
+                  roi >= 0 ? "text-[#00D1B2]" : "text-red-400"
                 )}
               >
                 {roi.toFixed(1)}%
               </p>
-              <p className="text-xs text-slate-500 mt-1">מתאריך רכישה</p>
+              <p className="text-xs text-[#9AA6B2] mt-1">מתאריך רכישה</p>
             </div>
           </div>
 
           {/* Price Chart */}
-          <div className="bg-slate-800/50 rounded-xl p-4">
+          <div className="panel rounded-xl p-4">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-white">מגמת שווי</h3>
+              <h3 className="font-semibold text-[#E6EEF3]">מגמת שווי</h3>
               {!comparisonAsset && (
                 <button
                   onClick={() =>
                     onCompare?.(PORTFOLIO_ASSETS.find((a) => a.id !== asset.id)!)
                   }
-                  className="btn-ghost text-xs text-emerald-400"
+                  className="btn-ghost text-xs text-[#00A3FF]"
                 >
                   <ArrowLeftRight className="w-4 h-4 ml-1" />
                   השווה נכס
@@ -324,12 +324,12 @@ function PropertyDetail({
 
           {/* Costs Breakdown */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <h3 className="font-semibold text-white mb-3">פירוט הוצאות שנתיות</h3>
+            <div className="panel rounded-xl p-4">
+              <h3 className="font-semibold text-[#E6EEF3] mb-3">פירוט הוצאות שנתיות</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">דמי ניהול ({asset.managementFee}%)</span>
-                  <span className="text-white">
+                  <span className="text-[#9AA6B2]">דמי ניהול ({asset.managementFee}%)</span>
+                  <span className="text-[#E6EEF3]">
                     {formatCurrency(
                       convertCurrency(
                         (asset.monthlyRent * 12 * asset.managementFee) / 100,
@@ -341,8 +341,8 @@ function PropertyDetail({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">תחזוקה</span>
-                  <span className="text-white">
+                  <span className="text-[#9AA6B2]">תחזוקה</span>
+                  <span className="text-[#E6EEF3]">
                     {formatCurrency(
                       convertCurrency(asset.maintenanceCosts, asset.currency, displayCurrency),
                       displayCurrency
@@ -350,17 +350,17 @@ function PropertyDetail({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400">Council Tax</span>
-                  <span className="text-white">
+                  <span className="text-[#9AA6B2]">Council Tax</span>
+                  <span className="text-[#E6EEF3]">
                     {formatCurrency(
                       convertCurrency(asset.councilTax, asset.currency, displayCurrency),
                       displayCurrency
                     )}
                   </span>
                 </div>
-                <div className="border-t border-slate-700 pt-2 mt-2">
+                <div className="border-t border-[rgba(255,255,255,0.06)] pt-2 mt-2">
                   <div className="flex justify-between text-sm font-medium">
-                    <span className="text-slate-300">סה״כ הוצאות</span>
+                    <span className="text-[#E6EEF3]">סה״כ הוצאות</span>
                     <span className="text-red-400">
                       {formatCurrency(
                         convertCurrency(
@@ -378,22 +378,22 @@ function PropertyDetail({
               </div>
             </div>
 
-            <div className="bg-slate-800/50 rounded-xl p-4">
-              <h3 className="font-semibold text-white mb-3">מידע נוסף</h3>
+            <div className="panel rounded-xl p-4">
+              <h3 className="font-semibold text-[#E6EEF3] mb-3">מידע נוסף</h3>
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400 flex items-center gap-1">
+                  <span className="text-[#9AA6B2] flex items-center gap-1">
                     <Calendar className="w-4 h-4" />
                     תאריך רכישה
                   </span>
-                  <span className="text-white">{formatDate(asset.purchaseDate)}</span>
+                  <span className="text-[#E6EEF3]">{formatDate(asset.purchaseDate)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400 flex items-center gap-1">
+                  <span className="text-[#9AA6B2] flex items-center gap-1">
                     <PoundSterling className="w-4 h-4" />
                     מחיר רכישה
                   </span>
-                  <span className="text-white">
+                  <span className="text-[#E6EEF3]">
                     {formatCurrency(
                       convertCurrency(asset.purchasePrice, asset.currency, displayCurrency),
                       displayCurrency
@@ -401,19 +401,19 @@ function PropertyDetail({
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400 flex items-center gap-1">
+                  <span className="text-[#9AA6B2] flex items-center gap-1">
                     <MapPin className="w-4 h-4" />
                     מיקוד
                   </span>
-                  <span className="text-white">{asset.postcode}</span>
+                  <span className="text-[#E6EEF3]">{asset.postcode}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-slate-400 flex items-center gap-1">
+                  <span className="text-[#9AA6B2] flex items-center gap-1">
                     <TrendingUp className="w-4 h-4" />
                     רווח הון
                   </span>
                   <span
-                    className={cn("font-medium", gain >= 0 ? "text-emerald-400" : "text-red-400")}
+                    className={cn("font-medium", gain >= 0 ? "text-[#00D1B2]" : "text-red-400")}
                   >
                     {formatCurrency(
                       convertCurrency(gain, asset.currency, displayCurrency),
@@ -427,7 +427,7 @@ function PropertyDetail({
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between p-4 border-t border-slate-800">
+        <div className="flex items-center justify-between p-4 border-t border-[rgba(255,255,255,0.06)]">
           <div className="flex gap-2">
             <button 
               type="button"
@@ -550,10 +550,10 @@ export default function MyProperties() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white">הנכסים שלי</h1>
-          <p className="text-slate-400">ניהול ומעקב תיק הנכסים</p>
+          <h1 className="text-3xl font-semibold text-[#E6EEF3] mb-1">הנכסים שלי</h1>
+          <p className="text-[#9AA6B2] text-sm">ניהול ומעקב תיק הנכסים</p>
         </div>
         <button 
           type="button"
@@ -581,7 +581,7 @@ export default function MyProperties() {
       {saveMessage && (
         <div className={`p-4 rounded-lg ${
           saveMessage.type === "success" 
-            ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+            ? "bg-[rgba(0,209,178,0.15)] text-[#00D1B2] border border-[rgba(0,209,178,0.3)]" 
             : "bg-red-500/20 text-red-400 border border-red-500/30"
         }`}>
           <div className="flex items-center gap-2">
@@ -596,39 +596,39 @@ export default function MyProperties() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="card p-4 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-emerald-500/30">
-          <p className="text-sm text-slate-300 mb-1">שווי תיק כולל</p>
-          <p className="text-2xl font-bold text-white">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="stat-card">
+          <p className="stat-label">שווי תיק כולל</p>
+          <p className="stat-value">
             {formatCurrency(totals.totalValue, "GBP")}
           </p>
-          <p className="text-xs text-slate-400 mt-1">{filteredAssets.length} נכסים</p>
+          <p className="text-xs text-[#9AA6B2] mt-2">{filteredAssets.length} נכסים</p>
         </div>
-        <div className="card p-4">
-          <p className="text-sm text-slate-300 mb-1">הכנסה חודשית כוללת</p>
-          <p className="text-2xl font-bold text-white">
+        <div className="stat-card">
+          <p className="stat-label">הכנסה חודשית כוללת</p>
+          <p className="stat-value">
             {formatCurrency(totals.totalRent, "GBP")}
           </p>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-[#9AA6B2] mt-2">
             {formatCurrency(totals.totalRent * 12, "GBP")} / שנה
           </p>
         </div>
-        <div className="card p-4">
-          <p className="text-sm text-slate-300 mb-1">תשואה ממוצעת</p>
-          <p className="text-2xl font-bold text-emerald-400">
+        <div className="stat-card">
+          <p className="stat-label">תשואה ממוצעת</p>
+          <p className="text-2xl font-semibold text-[#00D1B2]">
             {(
               filteredAssets.reduce((sum, a) => sum + calculateGrossYield(a), 0) /
               filteredAssets.length
             ).toFixed(1)}
             %
           </p>
-          <p className="text-xs text-slate-400 mt-1">Gross Yield</p>
+          <p className="text-xs text-[#9AA6B2] mt-2">Gross Yield</p>
         </div>
       </div>
 
       {/* Filters */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 bg-slate-800 rounded-lg p-1">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2 bg-[#17191F] rounded-lg p-1 border border-[rgba(255,255,255,0.06)]">
           {[
             { id: "all", label: "הכל" },
             { id: "uk", label: "🇬🇧 UK" },
@@ -640,20 +640,21 @@ export default function MyProperties() {
               className={cn(
                 "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
                 filter === f.id
-                  ? "bg-slate-700 text-white"
-                  : "text-slate-400 hover:text-white"
+                  ? "bg-[#12141A] text-[#E6EEF3]"
+                  : "text-[#9AA6B2] hover:text-[#E6EEF3]"
               )}
             >
               {f.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-400">
+        <div className="flex items-center gap-2 text-sm text-[#9AA6B2]">
           <span>מיון:</span>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
-            className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white"
+            className="input"
+            style={{ width: 'auto', padding: '8px 12px', fontSize: '14px' }}
           >
             <option value="value">שווי</option>
             <option value="yield">תשואה</option>
@@ -745,13 +746,13 @@ export default function MyProperties() {
             });
             setShowPropertyModal(true);
           }}
-          className="card border-dashed border-slate-700 p-4 flex flex-col items-center justify-center min-h-[280px] cursor-pointer hover:border-emerald-500/50 transition-colors"
+          className="card border-dashed border-[rgba(255,255,255,0.12)] p-6 flex flex-col items-center justify-center min-h-[280px] cursor-pointer hover:border-[#00A3FF] hover:bg-[#17191F] transition-all"
         >
-          <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-3">
-            <Plus className="w-8 h-8 text-slate-500" />
+          <div className="w-16 h-16 bg-[#17191F] rounded-full flex items-center justify-center mb-4 border border-[rgba(255,255,255,0.06)]">
+            <Plus className="w-8 h-8 text-[#9AA6B2]" />
           </div>
-          <p className="text-slate-400 font-medium">הוסף נכס חדש</p>
-          <p className="text-sm text-slate-500 mt-1">לחץ להוספת נכס לתיק</p>
+          <p className="text-[#E6EEF3] font-medium mb-1">הוסף נכס חדש</p>
+          <p className="text-sm text-[#9AA6B2]">לחץ להוספת נכס לתיק</p>
         </div>
       </div>
 
@@ -867,7 +868,7 @@ export default function MyProperties() {
                   });
                   setSaveMessage(null);
                 }}
-                className="text-slate-400 hover:text-white transition-colors"
+                className="text-[#9AA6B2] hover:text-[#E6EEF3] transition-colors"
                 style={{ pointerEvents: 'auto' }}
               >
                 <X className="w-5 h-5" />
@@ -878,7 +879,7 @@ export default function MyProperties() {
             <div className="p-6 space-y-4">
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-[#E6EEF3] mb-2">
                   שם הנכס *
                 </label>
                 <input
@@ -886,15 +887,15 @@ export default function MyProperties() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="למשל: 12 James Holt Avenue"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
-                  style={{ color: 'white' }}
+                  className="input w-full"
+                  style={{ color: '#E6EEF3' }}
                   autoComplete="off"
                 />
               </div>
 
               {/* Address */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-[#E6EEF3] mb-2">
                   כתובת *
                 </label>
                 <input
@@ -902,22 +903,22 @@ export default function MyProperties() {
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   placeholder="כתובת מלאה"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
-                  style={{ color: 'white' }}
+                  className="input w-full"
+                  style={{ color: '#E6EEF3' }}
                   autoComplete="off"
                 />
               </div>
 
               {/* Country */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-[#E6EEF3] mb-2">
                   מדינה *
                 </label>
                 <select
                   value={formData.country}
                   onChange={(e) => setFormData({ ...formData, country: e.target.value as any })}
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-[#00C805] transition-colors"
-                  style={{ color: 'white' }}
+                  className="input w-full"
+                  style={{ color: '#E6EEF3' }}
                 >
                   <option value="UK">🇬🇧 UK</option>
                   <option value="Israel">🇮🇱 Israel</option>
@@ -931,7 +932,7 @@ export default function MyProperties() {
 
               {/* Purchase Price */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-[#E6EEF3] mb-2">
                   מחיר רכישה ({CURRENCIES[formData.country === "UK" ? "GBP" : formData.country === "Israel" ? "ILS" : formData.country === "USA" ? "USD" : formData.country === "Cyprus" || formData.country === "Greece" || formData.country === "Portugal" ? "EUR" : "GEL"]?.symbol || "£"})
                 </label>
                 <input
@@ -944,15 +945,15 @@ export default function MyProperties() {
                     }
                   }}
                   placeholder="הזן מחיר רכישה"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
-                  style={{ color: 'white' }}
+                  className="input w-full"
+                  style={{ color: '#E6EEF3' }}
                   autoComplete="off"
                 />
               </div>
 
               {/* Monthly Rent */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-[#E6EEF3] mb-2">
                   הכנסה צפויה חודשית ({CURRENCIES[formData.country === "UK" ? "GBP" : formData.country === "Israel" ? "ILS" : formData.country === "USA" ? "USD" : formData.country === "Cyprus" || formData.country === "Greece" || formData.country === "Portugal" ? "EUR" : "GEL"]?.symbol || "£"})
                 </label>
                 <input
@@ -965,8 +966,8 @@ export default function MyProperties() {
                     }
                   }}
                   placeholder="הזן הכנסה חודשית צפויה"
-                  className="w-full px-4 py-2.5 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805] transition-colors"
-                  style={{ color: 'white' }}
+                  className="input w-full"
+                  style={{ color: '#E6EEF3' }}
                   autoComplete="off"
                 />
               </div>
@@ -975,7 +976,7 @@ export default function MyProperties() {
               {saveMessage && (
                 <div className={`p-3 rounded-lg text-sm ${
                   saveMessage.type === "success" 
-                    ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" 
+                    ? "bg-[rgba(0,209,178,0.15)] text-[#00D1B2] border border-[rgba(0,209,178,0.3)]" 
                     : "bg-red-500/20 text-red-400 border border-red-500/30"
                 }`}>
                   {saveMessage.text}
@@ -1148,7 +1149,7 @@ export default function MyProperties() {
                     setIsSaving(false);
                   }
                 }}
-                className="px-6 py-2 bg-[#00C805] hover:bg-[#00D806] text-white rounded-lg transition-colors flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-primary px-6 py-2 flex items-center gap-2 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSaving}
                 style={{ pointerEvents: isSaving ? 'none' : 'auto' }}
               >

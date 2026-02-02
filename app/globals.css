@@ -1,24 +1,44 @@
 @import "tailwindcss";
 
 /* ================================== */
-/* FINTECH THEME - Premium Dark Mode */
+/* INSTITUTIONAL THEME - Bloomberg/Finviz/Stripe Style */
 /* ================================== */
-/* Background: #0B0E14 | Cards: #151921 | Accent: #00C805 */
+/* Professional, trustworthy, institutional dark theme */
 
 @theme {
-  --color-background: #0B0E14;
-  --color-foreground: #E8EAED;
-  --color-card: #151921;
-  --color-card-foreground: #E8EAED;
-  --color-primary: #00C805;
+  /* Core Colors - Institutional Palette */
+  --color-background: #0E1116;
+  --color-surface: #12141A;
+  --color-panel: #17191F;
+  --color-foreground: #E6EEF3;
+  --color-foreground-muted: #9AA6B2;
+  
+  /* Accent Colors */
+  --color-primary: #00A3FF;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #1D2430;
-  --color-muted: #2D333F;
-  --color-muted-foreground: #9CA3AF;
-  --color-border: #2D333F;
-  --color-ring: #00C805;
-  --color-accent: #00C805;
-  --font-sans: 'Inter', var(--font-rubik), system-ui, -apple-system, sans-serif;
+  --color-success: #00D1B2;
+  --color-warning: #FFB020;
+  --color-error: #FF4D4F;
+  
+  /* UI Elements */
+  --color-card: #12141A;
+  --color-card-foreground: #E6EEF3;
+  --color-secondary: #17191F;
+  --color-muted: rgba(255, 255, 255, 0.06);
+  --color-muted-foreground: #9AA6B2;
+  --color-border: rgba(255, 255, 255, 0.06);
+  --color-ring: #00A3FF;
+  --color-accent: #00A3FF;
+  
+  /* Typography */
+  --font-sans: 'Inter', 'IBM Plex Sans', 'Roboto', system-ui, -apple-system, sans-serif;
+  --font-size-base: 16px;
+  --font-size-h1: 32px;
+  --font-size-h2: 24px;
+  --font-size-h3: 18px;
+  --line-height-base: 1.5;
+  --font-weight-heading: 600;
+  --font-weight-button: 500;
 }
 
 /* Base styles */
@@ -28,17 +48,41 @@
 }
 
 html {
-  background-color: #0B0E14;
+  background-color: #0E1116;
   color-scheme: dark;
 }
 
 body {
-  background-color: #0B0E14;
-  color: #E8EAED;
-  font-family: 'Inter', var(--font-rubik), system-ui, -apple-system, sans-serif;
+  background-color: #0E1116;
+  color: #E6EEF3;
+  font-family: var(--font-sans);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Scale */
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-heading);
+  line-height: 1.2;
+  color: #E6EEF3;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-heading);
+  line-height: 1.3;
+  color: #E6EEF3;
+}
+
+h3 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-heading);
+  line-height: 1.4;
+  color: #E6EEF3;
 }
 
 /* Custom scrollbar */
@@ -48,16 +92,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background-color: #0B0E14;
+  background-color: #0E1116;
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #2D333F;
+  background-color: rgba(255, 255, 255, 0.1);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #3D4450;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 /* ======================== */
@@ -71,23 +115,35 @@ body {
   border: 1px solid rgba(45, 51, 63, 0.5);
 }
 
-/* Card styles - FinTech professional look */
+/* Card styles - Institutional professional look */
 .card {
-  background-color: #151921;
-  border: 1px solid #2D333F;
+  background-color: #12141A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .card-hover {
-  background-color: #151921;
-  border: 1px solid #2D333F;
+  background-color: #12141A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  transition: all 0.3s ease;
+  transition: all 150ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .card-hover:hover {
-  border-color: rgba(0, 200, 5, 0.4);
-  box-shadow: 0 0 20px rgba(0, 200, 5, 0.1);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-1px) scale(1.01);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover {
+    transition: none;
+  }
+  .card-hover:hover {
+    transform: none;
+  }
 }
 
 /* Gradient backgrounds */
@@ -103,23 +159,39 @@ body {
   background: linear-gradient(90deg, rgba(0, 200, 5, 0.1) 0%, rgba(0, 160, 4, 0.1) 100%);
 }
 
-/* Stats card - FinTech style */
+/* Stats card - Institutional style */
 .stat-card {
-  background-color: #151921;
-  border: 1px solid #2D333F;
+  background-color: #12141A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
+  transition: all 150ms ease;
+}
+
+.stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffffff;
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #E6EEF3;
+  line-height: 1.2;
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #94a3b8;
+  color: #9AA6B2;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* Panel - darker surface for sections */
+.panel {
+  background-color: #17191F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
 }
 
 /* Sidebar styles */
@@ -241,24 +313,29 @@ button,
 
 .input {
   width: 100%;
-  background-color: #1D2430;
-  border: 1px solid #2D333F;
-  border-radius: 10px;
+  background-color: #17191F;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
   padding: 12px 16px;
-  color: #ffffff;
+  color: #E6EEF3;
   font-size: 14px;
-  transition: all 0.2s ease;
-  caret-color: #00C805;
+  transition: all 150ms ease;
+  caret-color: #00A3FF;
 }
 
 .input::placeholder {
-  color: #6B7280;
+  color: #9AA6B2;
+}
+
+.input:hover {
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .input:focus {
   outline: none;
-  border-color: #00C805;
-  box-shadow: 0 0 0 3px rgba(0, 200, 5, 0.2), 0 0 20px rgba(0, 200, 5, 0.1);
+  border-color: #00A3FF;
+  box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.2);
+  background-color: #12141A;
 }
 
 /* Select / Dropdown styles - Modern dark look */
@@ -300,27 +377,27 @@ button,
 }
 
 .badge-success {
-  background-color: rgba(0, 200, 5, 0.15);
-  color: #00C805;
-  border: 1px solid rgba(0, 200, 5, 0.3);
+  background-color: rgba(0, 209, 178, 0.15);
+  color: #00D1B2;
+  border: 1px solid rgba(0, 209, 178, 0.3);
 }
 
 .badge-warning {
-  background-color: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background-color: rgba(255, 176, 32, 0.15);
+  color: #FFB020;
+  border: 1px solid rgba(255, 176, 32, 0.3);
 }
 
 .badge-danger {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #f87171;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background-color: rgba(255, 77, 79, 0.15);
+  color: #FF4D4F;
+  border: 1px solid rgba(255, 77, 79, 0.3);
 }
 
 .badge-info {
-  background-color: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background-color: rgba(0, 163, 255, 0.15);
+  color: #00A3FF;
+  border: 1px solid rgba(0, 163, 255, 0.3);
 }
 
 /* Tab styles */
@@ -357,20 +434,35 @@ button,
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-/* Property card */
+/* Property card - Institutional clickable style */
 .property-card {
-  background-color: #151921;
-  border: 1px solid #2D333F;
+  background-color: #12141A;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
-  padding: 16px;
+  padding: 20px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 150ms ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .property-card:hover {
-  border-color: rgba(0, 200, 5, 0.4);
-  box-shadow: 0 0 20px rgba(0, 200, 5, 0.1);
-  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transform: translateY(-2px) scale(1.01);
+  background-color: #17191F;
+}
+
+.property-card:active {
+  transform: translateY(0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .property-card {
+    transition: none;
+  }
+  .property-card:hover {
+    transform: none;
+  }
 }
 
 /* Alert styles */
