@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Building2,
@@ -75,7 +75,9 @@ export default function Sidebar({
 }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
   const { user, logout, isAuthenticated } = useAuth();
+  const isPortfolioPage = pathname === "/portfolio";
 
   const handleLogout = () => {
     logout();
@@ -150,7 +152,12 @@ export default function Sidebar({
           {/* Portfolio Link */}
           <Link 
             href="/portfolio"
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-slate-400 hover:text-pink-400 hover:bg-pink-500/10 transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-colors",
+              isPortfolioPage
+                ? "text-pink-400 bg-pink-500/20 border border-pink-500/30"
+                : "text-slate-400 hover:text-pink-400 hover:bg-pink-500/10"
+            )}
           >
             <FolderOpen className="w-5 h-5 flex-shrink-0" />
             {!isCollapsed && <span>תיק השקעות</span>}
