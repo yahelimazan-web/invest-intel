@@ -73,10 +73,10 @@ const DEFAULT_MORTGAGE_TERM = 25;
 const FOLDER_COLORS = [
   { id: "emerald", bg: "bg-[rgba(0,209,178,0.2)]", text: "text-[#00D1B2]", border: "border-[rgba(0,209,178,0.3)]" },
   { id: "blue", bg: "bg-[rgba(0,163,255,0.2)]", text: "text-[#00A3FF]", border: "border-[rgba(0,163,255,0.3)]" },
-  { id: "purple", bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
+  { id: "purple", bg: "bg-[rgba(168,85,247,0.2)]", text: "text-[#A855F7]", border: "border-[rgba(168,85,247,0.3)]" },
   { id: "amber", bg: "bg-[rgba(255,176,32,0.2)]", text: "text-[#FFB020]", border: "border-[rgba(255,176,32,0.3)]" },
-  { id: "pink", bg: "bg-pink-500/20", text: "text-pink-400", border: "border-pink-500/30" },
-  { id: "cyan", bg: "bg-cyan-500/20", text: "text-cyan-400", border: "border-cyan-500/30" },
+  { id: "pink", bg: "bg-[rgba(236,72,153,0.2)]", text: "text-[#EC4899]", border: "border-[rgba(236,72,153,0.3)]" },
+  { id: "cyan", bg: "bg-[rgba(6,182,212,0.2)]", text: "text-[#06B6D4]", border: "border-[rgba(6,182,212,0.3)]" },
 ];
 
 // =============================================================================
@@ -1029,7 +1029,7 @@ export default function PortfolioPage() {
                     <div className="pt-4 border-t border-[rgba(255,255,255,0.06)] space-y-3">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium text-white flex items-center gap-2">
-                          <Calculator className="w-4 h-4 text-cyan-400" />
+                          <Calculator className="w-4 h-4 text-[#00A3FF]" />
                           חישוב תשואה
                         </h4>
                         <span className="text-xs text-[#9AA6B2]">
@@ -1048,12 +1048,12 @@ export default function PortfolioPage() {
                           "rounded-lg p-3 border",
                           financialMetrics.netYield >= 0 
                             ? "bg-[rgba(0,163,255,0.1)] border-[rgba(0,163,255,0.3)]"
-                            : "bg-red-500/10 border-red-500/30"
+                            : "bg-[rgba(255,77,79,0.1)] border-[rgba(255,77,79,0.3)]"
                         )}>
                           <p className="text-xs text-[#9AA6B2]">תשואה נטו</p>
                           <p className={cn(
                             "text-xl font-bold",
-                            financialMetrics.netYield >= 0 ? "text-[#00A3FF]" : "text-red-400"
+                            financialMetrics.netYield >= 0 ? "text-[#00A3FF]" : "text-[#FF4D4F]"
                           )}>
                             {financialMetrics.netYield.toFixed(1)}%
                           </p>
@@ -1064,13 +1064,13 @@ export default function PortfolioPage() {
                         "rounded-lg p-3 border",
                         financialMetrics.monthlyCashflow >= 0 
                           ? "bg-[rgba(0,209,178,0.1)] border-[rgba(0,209,178,0.3)]"
-                          : "bg-red-500/10 border-red-500/30"
+                          : "bg-[rgba(255,77,79,0.1)] border-[rgba(255,77,79,0.3)]"
                       )}>
                         <div className="flex items-center justify-between">
                           <p className="text-xs text-[#9AA6B2]">תזרים חודשי</p>
                           <p className={cn(
                             "text-lg font-bold",
-                            financialMetrics.monthlyCashflow >= 0 ? "text-[#00D1B2]" : "text-red-400"
+                            financialMetrics.monthlyCashflow >= 0 ? "text-[#00D1B2]" : "text-[#FF4D4F]"
                           )}>
                             {financialMetrics.monthlyCashflow >= 0 ? "+" : ""}£{Math.round(financialMetrics.monthlyCashflow).toLocaleString()}
                           </p>
@@ -1088,7 +1088,7 @@ export default function PortfolioPage() {
                         </div>
                         <div className="flex justify-between text-[#9AA6B2]">
                           <span>Cash-on-Cash Return</span>
-                          <span className={financialMetrics.cashOnCash >= 0 ? "text-[#00D1B2]" : "text-red-400"}>
+                          <span className={financialMetrics.cashOnCash >= 0 ? "text-[#00D1B2]" : "text-[#FF4D4F]"}>
                             {financialMetrics.cashOnCash.toFixed(1)}%
                           </span>
                         </div>
@@ -1289,7 +1289,7 @@ export default function PortfolioPage() {
 
               {/* Last/Current Price */}
               <div>
-                <label className="text-sm text-slate-400 block mb-2">שווי נוכחי (£)</label>
+                <label className="text-sm text-[#9AA6B2] block mb-2">שווי נוכחי (£)</label>
                 <input
                   type="number"
                   value={editingProperty.lastPrice || ""}
@@ -1385,14 +1385,14 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            <div className="p-4 border-t border-slate-700 flex gap-3 sticky bottom-0 bg-slate-800">
+            <div className="p-4 border-t border-[rgba(255,255,255,0.06)] flex gap-3 sticky bottom-0 bg-[#12141A]">
               <button
                 type="button"
                 onClick={() => {
                   setShowEditModal(false);
                   setEditingProperty(null);
                 }}
-                className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg transition-colors"
+                className="flex-1 py-2 btn-secondary"
               >
                 ביטול
               </button>
