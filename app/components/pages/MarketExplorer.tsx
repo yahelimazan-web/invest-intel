@@ -91,14 +91,7 @@ export default function MarketExplorer() {
       source: analysisData.prices.source,
       isLiveData: analysisData.prices.isLiveData,
     },
-    proximity: {
-      trainStation: analysisData.proximity.trainStation,
-      metro: analysisData.proximity.metro,
-      hospital: analysisData.proximity.hospital,
-      university: analysisData.proximity.university,
-      schools: analysisData.proximity.schools,
-      supermarkets: analysisData.proximity.supermarkets,
-    },
+    proximity: analysisData.proximity,
     mode: "live" as const,
     dataQuality: {
       epc: !!analysisData.epc.isLiveData,

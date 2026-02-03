@@ -5,6 +5,7 @@
 // =============================================================================
 
 import type { Country } from "./portfolio-db";
+export type { Country };
 
 export interface Resource {
   id: string;

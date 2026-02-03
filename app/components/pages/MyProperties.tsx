@@ -260,7 +260,7 @@ function PropertyDetail({
                         border: "1px solid #2D333F",
                         borderRadius: "8px",
                       }}
-                      formatter={(value: number) => [`${value?.toFixed(1)}%`, "צמיחה"]}
+                      formatter={(value) => `${Number(value) ?? 0}%`}
                     />
                     <Legend />
                     <Line
@@ -301,13 +301,12 @@ function PropertyDetail({
                         border: "1px solid #2D333F",
                         borderRadius: "8px",
                       }}
-                      formatter={(value: number) => [
+                      formatter={(value) =>
                         formatCurrency(
-                          convertCurrency(value, asset.currency, displayCurrency),
+                          convertCurrency(Number(value) || 0, asset.currency, displayCurrency),
                           displayCurrency
-                        ),
-                        "שווי",
-                      ]}
+                        )
+                      }
                     />
                     <Area
                       type="monotone"

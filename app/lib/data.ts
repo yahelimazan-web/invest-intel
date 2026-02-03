@@ -297,7 +297,7 @@ export const ALERTS: Alert[] = [
 export function calculateCurrencyExposure(
   assets: PropertyAsset[]
 ): Record<CurrencyCode, number> {
-  const exposure: Record<CurrencyCode, number> = { GBP: 0, EUR: 0, ILS: 0 };
+  const exposure: Record<CurrencyCode, number> = { GBP: 0, EUR: 0, ILS: 0, USD: 0, GEL: 0 };
   const total = assets.reduce((sum, a) => sum + a.currentValue, 0);
 
   assets.forEach((asset) => {

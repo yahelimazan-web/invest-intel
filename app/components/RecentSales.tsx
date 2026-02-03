@@ -10,7 +10,8 @@ import {
 } from "lucide-react";
 import { cn, formatCurrency } from "../lib/utils";
 import type { Country } from "../lib/portfolio-db";
-import { getCurrencySymbol } from "../lib/currency";
+import { getCurrencySymbol, CURRENCIES } from "../lib/currency";
+import type { CurrencyCode } from "../lib/utils";
 
 // =============================================================================
 // Recent Sales Component
@@ -181,7 +182,7 @@ export default function RecentSales({
                 </div>
                 <div className="text-left mr-3">
                   <p className="text-lg font-bold text-[#00C805]">
-                    {formatCurrency(sale.soldPrice, country)}
+                    {formatCurrency(sale.soldPrice, (CURRENCIES[country]?.code ?? "GBP") as CurrencyCode)}
                   </p>
                 </div>
               </div>

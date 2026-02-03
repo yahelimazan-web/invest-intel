@@ -105,9 +105,9 @@ export default function PropertyIntelligencePanel({
         <div className="flex items-start justify-between mb-3">
           <div>
             <h3 className="text-lg font-bold">{data.physical.address}</h3>
-            <p className="text-blue-100 text-sm">{data.physical.postcode}</p>
+            <p className="text-blue-100 text-sm">{data.postcode}</p>
           </div>
-          {data.dataQuality === "gold" && (
+          {typeof data.dataQuality === "object" && data.dataQuality && Object.values(data.dataQuality).every(Boolean) && (
             <span className="flex items-center gap-1 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">
               <CheckCircle2 className="w-3 h-3" />
               Gold Data
@@ -157,36 +157,36 @@ export default function PropertyIntelligencePanel({
               {data.physical.tenure}
             </span>
           </div>
-          {data.physical.parking !== undefined && (
+          {(data.physical as Record<string, unknown>).parking !== undefined && (
             <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-3">
               <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                 <Car className="w-4 h-4" />
                 חניה
               </span>
-              <span className={`text-sm font-semibold ${data.physical.parking ? "text-emerald-600" : "text-gray-400"}`}>
-                {data.physical.parking ? "כן" : "לא"}
+              <span className={`text-sm font-semibold ${(data.physical as Record<string, unknown>).parking ? "text-emerald-600" : "text-gray-400"}`}>
+                {(data.physical as Record<string, unknown>).parking ? "כן" : "לא"}
               </span>
             </div>
           )}
-          {data.physical.balcony !== undefined && (
+          {(data.physical as Record<string, unknown>).balcony !== undefined && (
             <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-3">
               <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                 <Square className="w-4 h-4" />
                 מרפסת
               </span>
-              <span className={`text-sm font-semibold ${data.physical.balcony ? "text-emerald-600" : "text-gray-400"}`}>
-                {data.physical.balcony ? "כן" : "לא"}
+              <span className={`text-sm font-semibold ${(data.physical as Record<string, unknown>).balcony ? "text-emerald-600" : "text-gray-400"}`}>
+                {(data.physical as Record<string, unknown>).balcony ? "כן" : "לא"}
               </span>
             </div>
           )}
-          {data.physical.garden !== undefined && (
+          {(data.physical as Record<string, unknown>).garden !== undefined && (
             <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-3">
               <span className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                 <Trees className="w-4 h-4" />
                 גינה
               </span>
-              <span className={`text-sm font-semibold ${data.physical.garden ? "text-emerald-600" : "text-gray-400"}`}>
-                {data.physical.garden ? "כן" : "לא"}
+              <span className={`text-sm font-semibold ${(data.physical as Record<string, unknown>).garden ? "text-emerald-600" : "text-gray-400"}`}>
+                {(data.physical as Record<string, unknown>).garden ? "כן" : "לא"}
               </span>
             </div>
           )}
@@ -202,7 +202,7 @@ export default function PropertyIntelligencePanel({
         <div className="relative h-6 bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500 rounded-full overflow-hidden">
           <div 
             className="absolute top-0 h-full w-1 bg-white border-2 border-gray-800"
-            style={{ left: `${data.physical.epcScore}%` }}
+            style={{ left: `${data.physical.epcScore ?? 0}%` }}
           />
         </div>
         <div className="flex justify-between text-xs text-gray-500 mt-1">
@@ -210,7 +210,7 @@ export default function PropertyIntelligencePanel({
           <span>G (לא יעיל)</span>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          {data.physical.epcRating >= "E" ? "⚠️ נדרש שדרוג ל-EPC E או טוב יותר להשכרה" : "✓ עומד בדרישות השכרה"}
+          {data.physical.epcRating != null && data.physical.epcRating <= "E" ? "✓ עומד בדרישות השכרה" : "⚠️ נדרש שדרוג ל-EPC E או טוב יותר להשכרה"}
         </p>
       </div>
     </div>
@@ -411,7 +411,7 @@ export default function PropertyIntelligencePanel({
             <ExternalLink className="w-3 h-3" />
           </a>
           <a
-            href={data.council.economicUrl}
+            href={(data.council as { economicUrl?: string }).economicUrl ?? "#"}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-medium px-3 py-2 rounded-lg hover:bg-emerald-200 transition-colors"
@@ -596,10 +596,10 @@ export default function PropertyIntelligencePanel({
             <div className="flex items-center gap-2 mb-1">
               <Building2 className="w-5 h-5 text-blue-400" />
               <span className="text-sm font-medium text-slate-300">
-                {data.mode === "existing" ? "נכס קיים" : "ניתוח פוטנציאלי"}
+                {(data.mode as string) === "existing" ? "נכס קיים" : "ניתוח פוטנציאלי"}
               </span>
             </div>
-            <h2 className="text-lg font-bold">{data.physical.postcode}</h2>
+            <h2 className="text-lg font-bold">{data.postcode}</h2>
             <p className="text-sm text-slate-400">{data.council.name}, {data.council.region}</p>
           </div>
         </div>
@@ -635,7 +635,7 @@ export default function PropertyIntelligencePanel({
         <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
           <Clock className="w-3 h-3" />
           עודכן: {new Date(data.timestamp).toLocaleString("he-IL")}
-          {data.dataQuality === "gold" && (
+          {typeof data.dataQuality === "object" && data.dataQuality && Object.values(data.dataQuality).every(Boolean) && (
             <span className="mr-2 bg-amber-100 text-amber-700 px-2 py-0.5 rounded text-xs font-medium">
               Gold Data
             </span>

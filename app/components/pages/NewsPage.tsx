@@ -73,6 +73,7 @@ interface LiveNewsItem {
   publishedAt: string;
   category: string;
   sentiment: string;
+  country?: string;
   isLive: boolean;
 }
 
@@ -509,10 +510,9 @@ export default function NewsPage() {
                       border: "1px solid #334155",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [
-                      formatCurrency(value, selectedCountry === "cyprus" ? "EUR" : "GBP"),
-                      "מחיר ממוצע",
-                    ]}
+                    formatter={(value) =>
+                      formatCurrency(Number(value) || 0, selectedCountry === "cyprus" ? "EUR" : "GBP")
+                    }
                   />
                   <Area
                     type="monotone"
@@ -533,7 +533,7 @@ export default function NewsPage() {
                       border: "1px solid #334155",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [`${value.toFixed(1)}%`, ""]}
+                    formatter={(value) => `${Number(value) ?? 0}%`}
                   />
                   <Legend />
                   <Bar dataKey="inflation" name="אינפלציה" fill="#3b82f6" fillOpacity={0.6} />
@@ -557,7 +557,7 @@ export default function NewsPage() {
                       border: "1px solid #334155",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [`${value.toFixed(2)}%`, "ריבית"]}
+                    formatter={(value) => `${Number(value) ?? 0}%`}
                   />
                   <Line
                     type="monotone"
