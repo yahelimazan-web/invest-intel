@@ -473,7 +473,7 @@ export default function PropertyDocumentFolders({
                         )}
                       </button>
                       <input
-                        ref={(el) => (fileInputRefs.current[folder.id] = el)}
+                        ref={(el) => { fileInputRefs.current[folder.id] = el; }}
                         type="file"
                         accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
                         onChange={(e) => handleFileUpload(folder.id, e)}
