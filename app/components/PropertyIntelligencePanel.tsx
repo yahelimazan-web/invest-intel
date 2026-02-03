@@ -34,6 +34,17 @@ import {
 } from "lucide-react";
 import type { PropertyIntelligence } from "../lib/ukPropertyEngine";
 
+/** Extended market shape for UI (some fields may come from other sources) */
+type MarketWithExtras = PropertyIntelligence["market"] & {
+  avgRent?: number | null;
+  avgPricePerSqm?: number | null;
+  councilTaxAnnual?: number | null;
+  councilTaxBand?: string | null;
+  lastSalePrice?: number | null;
+  lastSaleDate?: string | null;
+  rentYield?: number | null;
+};
+
 interface PropertyIntelligencePanelProps {
   data: PropertyIntelligence;
   onClose: () => void;
@@ -69,10 +80,11 @@ export default function PropertyIntelligencePanel({
   onClose,
 }: PropertyIntelligencePanelProps) {
   const [activeTab, setActiveTab] = useState<TabType>("physical");
-  
+  const market = data.market as MarketWithExtras;
+
   // ROI Calculator state
-  const [purchasePrice, setPurchasePrice] = useState(data.market.avgSoldPrice);
-  const [monthlyRent, setMonthlyRent] = useState(data.market.avgRent);
+  const [purchasePrice, setPurchasePrice] = useState(market.avgSoldPrice ?? 0);
+  const [monthlyRent, setMonthlyRent] = useState(market.avgRent ?? 1000);
 
   const formatCurrency = (amount: number) => `£${amount.toLocaleString()}`;
   const formatDistance = (meters: number) => {
@@ -83,7 +95,7 @@ export default function PropertyIntelligencePanel({
   // Calculate ROI
   const annualRent = monthlyRent * 12;
   const grossYield = purchasePrice > 0 ? (annualRent / purchasePrice) * 100 : 0;
-  const annualCosts = data.market.councilTaxAnnual * 0.1 + annualRent * 0.15; // Est. costs
+  const annualCosts = (market.councilTaxAnnual ?? 0) * 0.1 + annualRent * 0.15; // Est. costs
   const netYield = purchasePrice > 0 ? ((annualRent - annualCosts) / purchasePrice) * 100 : 0;
 
   const renderPhysicalTab = () => (
@@ -420,28 +432,28 @@ export default function PropertyIntelligencePanel({
         <div className="flex items-center justify-between mb-3">
           <div>
             <p className="text-emerald-100 text-sm">מחיר ממוצע באזור</p>
-            <p className="text-3xl font-bold">{formatCurrency(data.market.avgSoldPrice)}</p>
+            <p className="text-3xl font-bold">{formatCurrency(market.avgSoldPrice ?? 0)}</p>
           </div>
-          <div className={`flex items-center gap-1 ${data.market.priceChange12m >= 0 ? "text-emerald-200" : "text-red-200"}`}>
-            <TrendingUp className={`w-4 h-4 ${data.market.priceChange12m < 0 ? "rotate-180" : ""}`} />
-            <span className="text-sm font-medium">{data.market.priceChange12m}%</span>
+          <div className={`flex items-center gap-1 ${(market.priceChange12m ?? 0) >= 0 ? "text-emerald-200" : "text-red-200"}`}>
+            <TrendingUp className={`w-4 h-4 ${(market.priceChange12m ?? 0) < 0 ? "rotate-180" : ""}`} />
+            <span className="text-sm font-medium">{market.priceChange12m ?? 0}%</span>
             <span className="text-xs opacity-75">12 חודשים</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
             <p className="text-emerald-100 text-xs">מחיר למ״ר</p>
-            <p className="text-lg font-semibold">{formatCurrency(data.market.avgPricePerSqm)}</p>
+            <p className="text-lg font-semibold">{formatCurrency(market.avgPricePerSqm ?? 0)}</p>
           </div>
           <div>
             <p className="text-emerald-100 text-xs">תשואה משוערת</p>
-            <p className="text-lg font-semibold">{data.market.rentYield}%</p>
+            <p className="text-lg font-semibold">{market.rentYield ?? 0}%</p>
           </div>
         </div>
       </div>
 
       {/* Last Sale (if available) */}
-      {data.market.lastSalePrice && (
+      {market.lastSalePrice && (
         <div className="bg-gray-50 dark:bg-gray-800 rounded-xl p-4">
           <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
             <Calendar className="w-4 h-4 text-gray-500" />
@@ -451,13 +463,13 @@ export default function PropertyIntelligencePanel({
             <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
               <p className="text-xs text-gray-500">מחיר</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {formatCurrency(data.market.lastSalePrice)}
+                {formatCurrency(market.lastSalePrice)}
               </p>
             </div>
             <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
               <p className="text-xs text-gray-500">תאריך</p>
               <p className="text-lg font-bold text-gray-900 dark:text-white">
-                {new Date(data.market.lastSaleDate!).toLocaleDateString("he-IL")}
+                {new Date(market.lastSaleDate!).toLocaleDateString("he-IL")}
               </p>
             </div>
           </div>
@@ -527,13 +539,13 @@ export default function PropertyIntelligencePanel({
           <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
             <p className="text-xs text-gray-500">Band</p>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {data.market.councilTaxBand}
+              {market.councilTaxBand ?? "—"}
             </p>
           </div>
           <div className="bg-white dark:bg-gray-700 rounded-lg p-3">
             <p className="text-xs text-gray-500">עלות שנתית</p>
             <p className="text-lg font-bold text-gray-900 dark:text-white">
-              {formatCurrency(data.market.councilTaxAnnual)}
+              {formatCurrency(market.councilTaxAnnual ?? 0)}
             </p>
           </div>
         </div>
@@ -548,13 +560,13 @@ export default function PropertyIntelligencePanel({
         <div className="flex items-center justify-between">
           <div>
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
-              {formatCurrency(data.market.avgRent)}
+              {formatCurrency(market.avgRent ?? 0)}
             </p>
             <p className="text-xs text-gray-500">ממוצע חודשי</p>
           </div>
           <div className="text-left">
             <p className="text-lg font-semibold text-purple-600">
-              {formatCurrency(data.market.avgRent * 12)}
+              {formatCurrency((market.avgRent ?? 0) * 12)}
             </p>
             <p className="text-xs text-gray-500">שנתי</p>
           </div>
@@ -564,7 +576,7 @@ export default function PropertyIntelligencePanel({
       {/* Data Source */}
       <div className="flex items-center gap-2 text-xs text-gray-400">
         <Info className="w-3 h-3" />
-        <span>מקור: {data.market.source}</span>
+        <span>מקור: {market.source}</span>
       </div>
     </div>
   );
