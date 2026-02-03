@@ -210,7 +210,7 @@ export default function PropertyIntelligencePanel({
           <span>G (לא יעיל)</span>
         </div>
         <p className="text-xs text-gray-500 mt-2">
-          {data.physical.epcRating != null && data.physical.epcRating <= "E" ? "✓ עומד בדרישות השכרה" : "⚠️ נדרש שדרוג ל-EPC E או טוב יותר להשכרה"}
+          {data.physical.epcRating != null && data.physical.epcRating >= "E" ? "✓ עומד בדרישות השכרה" : "⚠️ נדרש שדרוג ל-EPC E או טוב יותר להשכרה"}
         </p>
       </div>
     </div>
