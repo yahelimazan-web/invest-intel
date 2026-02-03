@@ -47,7 +47,7 @@ import {
 import PropertyDocuments from "../components/PropertyDocuments";
 import PropertyDocumentFolders from "../components/PropertyDocumentFolders";
 import AIChat from "../components/AIChat";
-import ChatInterface, { ChatToggleButton } from "../components/ChatInterface";
+import ChatInterface from "../components/ChatInterface";
 
 // =============================================================================
 // Financial Calculation Constants
@@ -1406,17 +1406,6 @@ export default function PortfolioPage() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* AI Chat - Floating */}
-      {selectedProperty && (
-        <AIChat
-          propertyData={null}
-          propertyId={selectedProperty.id}
-          financialData={null}
-          isOpen={isAIChatOpen}
-          onClose={() => setIsAIChatOpen(false)}
-        />
       )}
 
       {/* AI Chat - Floating */}

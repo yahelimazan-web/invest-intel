@@ -289,7 +289,7 @@ async function fetchExternalNews(countries: string[] = ["UK"]): Promise<NewsItem
 
     // Build query from countries - Global coverage
     const queries = countries
-      .map(c => COUNTRY_QUERIES[c] || `(${c} property) OR (${c} real estate)`)
+      .map(c => `(${c} property) OR (${c} real estate)`)
       .join(" OR ");
 
     const response = await fetch(

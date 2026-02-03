@@ -72,6 +72,14 @@ export default function Dashboard() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailStatus, setEmailStatus] = useState<{ success?: boolean; message?: string } | null>(null);
 
+  const getAssetCurrency = (country?: string): CurrencyCode => {
+    if (country === "Israel") return "ILS";
+    if (country === "USA") return "USD";
+    if (country === "Cyprus" || country === "Greece" || country === "Portugal") return "EUR";
+    if (country === "Georgia") return "GEL";
+    return "GBP";
+  };
+
   // Load portfolio from Supabase
   useEffect(() => {
     if (!user?.id) {
@@ -540,10 +548,9 @@ export default function Dashboard() {
                     border: "1px solid #334155",
                     borderRadius: "8px",
                   }}
-                  formatter={(value: number) => [
-                    formatCurrency(value, displayCurrency),
-                    "שווי",
-                  ]}
+                  formatter={(value) =>
+                    formatCurrency(Number(value) || 0, displayCurrency)
+                  }
                 />
                 <Area
                   type="monotone"
@@ -578,7 +585,7 @@ export default function Dashboard() {
                     innerRadius={50}
                     outerRadius={70}
                     paddingAngle={2}
-                  >
+                     >
                     {currencyExposure.map((entry) => (
                       <Cell
                         key={entry.currency}
@@ -592,7 +599,7 @@ export default function Dashboard() {
                       border: "1px solid #334155",
                       borderRadius: "8px",
                     }}
-                    formatter={(value: number) => [`${value.toFixed(1)}%`, "חשיפה"]}
+                    formatter={(value) => `${Number(value) || 0}%`}
                   />
                 </PieChart>
               </ResponsiveContainer>

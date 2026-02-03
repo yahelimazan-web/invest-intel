@@ -1168,7 +1168,7 @@ export default function LiveDataPanel({
                                     border: "1px solid #334155",
                                     borderRadius: "8px",
                                   }}
-                                  formatter={(value: number) => [value, "אירועים"]}
+                                  formatter={(value: number | undefined) => [value ?? 0, "אירועים"]}
                                 />
                                 <Area
                                   type="monotone"
@@ -1378,7 +1378,7 @@ export default function LiveDataPanel({
                                 border: "1px solid #334155",
                                 borderRadius: "8px",
                               }}
-                              formatter={(value: number) => [formatCurrency(value, "GBP"), "מחיר ממוצע"]}
+                              formatter={(value: number | undefined) => [formatCurrency(value ?? 0, "GBP"), "מחיר ממוצע"]}
                             />
                             <Area
                               type="monotone"

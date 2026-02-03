@@ -74,7 +74,7 @@ export default function DataPanel({
 
   // ROI Calculator
   const [purchasePrice, setPurchasePrice] = useState(intelligenceData?.market.avgSoldPrice || 200000);
-  const [monthlyRent, setMonthlyRent] = useState(intelligenceData?.market.avgRent || 1000);
+  const [monthlyRent, setMonthlyRent] = useState(1000);
   
   const grossYield = purchasePrice > 0 ? ((monthlyRent * 12) / purchasePrice) * 100 : 0;
   const netYield = grossYield * 0.75; // ~25% costs
@@ -144,12 +144,12 @@ export default function DataPanel({
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <p className="text-blue-100 text-xs mb-1">
-                    {intelligenceData.mode === "existing" ? "נכס קיים" : "ניתוח פוטנציאלי"}
+                    {(intelligenceData.mode as string) === "existing" ? "נכס קיים" : "ניתוח פוטנציאלי"}
                   </p>
                   <h3 className="text-lg font-bold">{intelligenceData.physical.address}</h3>
                   <p className="text-sm text-blue-100">{intelligenceData.council.name}, {intelligenceData.council.region}</p>
                 </div>
-                {intelligenceData.dataQuality === "gold" && (
+                {typeof intelligenceData.dataQuality === "object" && Object.values(intelligenceData.dataQuality).every(Boolean) && (
                   <span className="flex items-center gap-1 bg-amber-400 text-amber-900 text-xs font-bold px-2 py-1 rounded-full">
                     <CheckCircle2 className="w-3 h-3" />
                     Gold
@@ -214,27 +214,27 @@ export default function DataPanel({
                         <span className="text-gray-500">סוג בעלות</span>
                         <span className="font-medium text-gray-900 dark:text-white">{intelligenceData.physical.tenure}</span>
                       </div>
-                      {intelligenceData.physical.parking !== undefined && (
+                      {(intelligenceData.physical as Record<string, unknown>).parking !== undefined && (
                         <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-2 text-sm">
                           <span className="text-gray-500 flex items-center gap-1"><Car className="w-3 h-3" />חניה</span>
-                          <span className={intelligenceData.physical.parking ? "text-emerald-600 font-medium" : "text-gray-400"}>
-                            {intelligenceData.physical.parking ? "כן" : "לא"}
+                          <span className={(intelligenceData.physical as Record<string, unknown>).parking ? "text-emerald-600 font-medium" : "text-gray-400"}>
+                            {(intelligenceData.physical as Record<string, unknown>).parking ? "כן" : "לא"}
                           </span>
                         </div>
                       )}
-                      {intelligenceData.physical.balcony !== undefined && (
+                      {(intelligenceData.physical as Record<string, unknown>).balcony !== undefined && (
                         <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-2 text-sm">
                           <span className="text-gray-500 flex items-center gap-1"><Square className="w-3 h-3" />מרפסת</span>
-                          <span className={intelligenceData.physical.balcony ? "text-emerald-600 font-medium" : "text-gray-400"}>
-                            {intelligenceData.physical.balcony ? "כן" : "לא"}
+                          <span className={(intelligenceData.physical as Record<string, unknown>).balcony ? "text-emerald-600 font-medium" : "text-gray-400"}>
+                            {(intelligenceData.physical as Record<string, unknown>).balcony ? "כן" : "לא"}
                           </span>
                         </div>
                       )}
-                      {intelligenceData.physical.garden !== undefined && (
+                      {(intelligenceData.physical as Record<string, unknown>).garden !== undefined && (
                         <div className="flex items-center justify-between bg-white dark:bg-gray-700 rounded-lg p-2 text-sm">
                           <span className="text-gray-500 flex items-center gap-1"><Trees className="w-3 h-3" />גינה</span>
-                          <span className={intelligenceData.physical.garden ? "text-emerald-600 font-medium" : "text-gray-400"}>
-                            {intelligenceData.physical.garden ? "כן" : "לא"}
+                          <span className={(intelligenceData.physical as Record<string, unknown>).garden ? "text-emerald-600 font-medium" : "text-gray-400"}>
+                            {(intelligenceData.physical as Record<string, unknown>).garden ? "כן" : "לא"}
                           </span>
                         </div>
                       )}
@@ -382,21 +382,21 @@ export default function DataPanel({
                     <div className="flex items-center justify-between mb-2">
                       <div>
                         <p className="text-emerald-100 text-xs">מחיר ממוצע באזור</p>
-                        <p className="text-2xl font-bold">{formatCurrency(intelligenceData.market.avgSoldPrice)}</p>
+                        <p className="text-2xl font-bold">{formatCurrency(intelligenceData.market.avgSoldPrice ?? 0)}</p>
                       </div>
-                      <div className={`flex items-center gap-1 ${intelligenceData.market.priceChange12m >= 0 ? "text-emerald-200" : "text-red-200"}`}>
-                        <TrendingUp className={`w-4 h-4 ${intelligenceData.market.priceChange12m < 0 ? "rotate-180" : ""}`} />
-                        <span className="text-sm font-medium">{intelligenceData.market.priceChange12m}%</span>
+                      <div className={`flex items-center gap-1 ${(intelligenceData.market.priceChange12m ?? 0) >= 0 ? "text-emerald-200" : "text-red-200"}`}>
+                        <TrendingUp className={`w-4 h-4 ${(intelligenceData.market.priceChange12m ?? 0) < 0 ? "rotate-180" : ""}`} />
+                        <span className="text-sm font-medium">{intelligenceData.market.priceChange12m ?? 0}%</span>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div>
                         <p className="text-emerald-100 text-xs">מחיר/מ״ר</p>
-                        <p className="font-semibold">{formatCurrency(intelligenceData.market.avgPricePerSqm)}</p>
+                        <p className="font-semibold">{formatCurrency(Number((intelligenceData.market as Record<string, unknown>).avgPricePerSqm) || 0)}</p>
                       </div>
                       <div>
                         <p className="text-emerald-100 text-xs">שכירות</p>
-                        <p className="font-semibold">{formatCurrency(intelligenceData.market.avgRent)}/חודש</p>
+                        <p className="font-semibold">{formatCurrency(Number((intelligenceData.market as Record<string, unknown>).avgRent) || 0)}/חודש</p>
                       </div>
                     </div>
                   </div>
@@ -456,10 +456,10 @@ export default function DataPanel({
                     <h4 className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">Council Tax</h4>
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white dark:bg-gray-700 rounded-lg p-2 text-center">
-                        <p className="text-xl font-bold text-gray-900 dark:text-white">Band {intelligenceData.market.councilTaxBand}</p>
+                        <p className="text-xl font-bold text-gray-900 dark:text-white">Band {String((intelligenceData.market as Record<string, unknown>).councilTaxBand ?? "—")}</p>
                       </div>
                       <div className="bg-white dark:bg-gray-700 rounded-lg p-2 text-center">
-                        <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(intelligenceData.market.councilTaxAnnual)}</p>
+                        <p className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(Number((intelligenceData.market as Record<string, unknown>).councilTaxAnnual) || 0)}</p>
                         <p className="text-xs text-gray-500">שנתי</p>
                       </div>
                     </div>

@@ -173,7 +173,7 @@ export default function AIChat({
         parts.push(`## נתוני פשיעה
 - רמת סיכון: ${propertyData.crime.riskLevel || "לא ידוע"}
 - סה"כ אירועים (6 חודשים): ${propertyData.crime.totalCrimes || 0}
-- קטגוריות נפוצות: ${propertyData.crime.byCategory?.slice(0, 3).map(c => `${c.category}: ${c.count}`).join(", ") || "לא ידוע"}`);
+- קטגוריות נפוצות: ${propertyData.crime.categories ? Object.entries(propertyData.crime.categories).slice(0, 3).map(([cat, count]) => `${cat}: ${count}`).join(", ") : "לא ידוע"}`);
       }
 
       // Proximity

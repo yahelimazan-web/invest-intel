@@ -313,7 +313,7 @@ export default function MapContent({
                       £{avgPrice.toLocaleString()}
                     </div>
                     <span className="inline-block mt-1 text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">
-                      {mode === "existing" ? "נכס קיים - Gold Data" : "נכס פוטנציאלי"}
+                      {(mode as string) === "existing" ? "נכס קיים - Gold Data" : "נכס פוטנציאלי"}
                     </span>
                   </div>
                 </Popup>

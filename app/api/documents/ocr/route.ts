@@ -54,23 +54,21 @@ export async function POST(request: NextRequest) {
     let embedding: number[] | null = null;
     let summary: string | null = null;
 
-    // Process PDF files with OCR
+    // Process PDF files with OCR (pdf-parse v2: named export PDFParse, no default)
     if (doc.file_type === "application/pdf") {
       try {
-        // Try to use pdf-parse if available
         try {
-          const pdfParse = await import("pdf-parse");
+          const { PDFParse } = await import("pdf-parse");
           const pdfBuffer = await fileData.arrayBuffer();
-          const pdfData = await pdfParse.default(Buffer.from(pdfBuffer));
-          extractedText = pdfData.text;
+          const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+          const result = await parser.getText();
+          extractedText = result?.text ?? "";
+          await parser.destroy?.();
         } catch (importError) {
-          // If pdf-parse is not installed, log and continue
-          console.warn("[OCR] pdf-parse not installed. Install with: npm install pdf-parse");
-          // For now, we'll skip text extraction but continue with other processing
+          console.warn("[OCR] pdf-parse not available:", importError);
         }
       } catch (pdfError) {
         console.error("[OCR] PDF parsing error:", pdfError);
-        // Fallback: return without text extraction
       }
     }
 
