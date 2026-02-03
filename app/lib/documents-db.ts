@@ -81,8 +81,9 @@ export async function loadPropertyDocuments(
     }
 
     // Generate signed URLs for each document
+    const documents = data as PropertyDocument[];
     const documentsWithUrls = await Promise.all(
-      data.map(async (doc) => {
+      documents.map(async (doc) => {
         try {
           const { data: urlData } = await supabase.storage
             .from("property-documents")

@@ -83,7 +83,6 @@ export async function translateToHebrew(text: string): Promise<string> {
     "negative": "שלילי",
     "neutral": "ניטרלי",
     "outlook": "תחזית",
-    "forecast": "תחזית",
     "bullish": "שורי",
     "bearish": "דובי",
     
