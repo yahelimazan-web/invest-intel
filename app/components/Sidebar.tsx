@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
+  LayoutDashboard,
   Briefcase,
-  BarChart3,
-  Settings,
+  LineChart,
+  Bot,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -15,7 +16,7 @@ import {
 import { cn } from "../lib/utils";
 import { useAuth } from "../lib/auth";
 
-export type PageId = "portfolio" | "insights" | "settings";
+export type PageId = "dashboard" | "portfolio" | "market-analysis" | "ai-analyst";
 
 interface SidebarProps {
   currentPage: PageId;
@@ -25,27 +26,13 @@ interface SidebarProps {
 const NAV_ITEMS: Array<{
   id: PageId;
   label: string;
-  icon: typeof Briefcase;
+  icon: typeof LayoutDashboard;
   description: string;
 }> = [
-  {
-    id: "portfolio",
-    label: "תיק השקעות",
-    icon: Briefcase,
-    description: "נכסים ותיק",
-  },
-  {
-    id: "insights",
-    label: "תובנות",
-    icon: BarChart3,
-    description: "דשבורד ומדדים",
-  },
-  {
-    id: "settings",
-    label: "הגדרות",
-    icon: Settings,
-    description: "הגדרות מערכת",
-  },
+  { id: "dashboard", label: "דאשבורד", icon: LayoutDashboard, description: "סקירה כללית" },
+  { id: "portfolio", label: "תיק הנכסים שלי", icon: Briefcase, description: "נכסים ותיק" },
+  { id: "market-analysis", label: "ניתוח שוק", icon: LineChart, description: "תובנות שוק" },
+  { id: "ai-analyst", label: "אנליסט AI", icon: Bot, description: "ניתוח חכם" },
 ];
 
 const SIDEBAR_WIDTH = 256;
@@ -67,7 +54,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
   return (
     <aside
-      className="fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-[width] duration-300 ease-in-out"
+      className="fixed right-0 top-0 h-full bg-slate-900 border-l border-slate-800 z-40 flex flex-col transition-[width] duration-300 ease-in-out"
       style={{ width }}
       aria-label="ניווט ראשי"
     >
@@ -98,7 +85,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
           </button>
         </div>
 
-        {/* Navigation - Portfolio, Insights, Settings */}
+        {/* Navigation - Home, Properties, Analysis, Settings */}
         <nav className="flex-1 py-4 overflow-y-auto px-2">
           <div className="space-y-1">
             {NAV_ITEMS.map((item) => {

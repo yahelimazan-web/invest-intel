@@ -27,11 +27,9 @@ export default function RootLayout({
     <html lang="he" dir="rtl" className={inter.variable}>
       <body
         className={`${inter.variable} ${rubik.variable} font-sans antialiased min-h-screen text-slate-900`}
-        style={{ fontFamily: 'var(--font-inter), Inter, var(--font-rubik), system-ui, sans-serif' }}
+        style={{ fontFamily: "var(--font-inter), Inter, var(--font-rubik), system-ui, sans-serif" }}
       >
-        <Providers>
-          {children}
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
