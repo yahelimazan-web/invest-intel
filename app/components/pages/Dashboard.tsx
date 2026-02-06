@@ -372,8 +372,8 @@ export default function Dashboard() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#00C805] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">טוען תיק השקעות...</p>
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 text-sm">טוען תיק השקעות...</p>
         </div>
       </div>
     );
@@ -381,53 +381,84 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Summary Ribbon - DoorLoop style: 4 key metrics */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="summary-metric flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0">
+            <Wallet className="w-6 h-6 text-teal-600" />
+          </div>
+          <div>
+            <p className="financial-value">{formatCurrency(portfolioStats?.totalEquity ?? 0, displayCurrency)}</p>
+            <p className="text-sm text-slate-500 font-medium">שווי תיק כולל</p>
+          </div>
+        </div>
+        <div className="summary-metric flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center flex-shrink-0">
+            <Percent className="w-6 h-6 text-teal-600" />
+          </div>
+          <div>
+            <p className={cn(
+              "financial-value",
+              (portfolioStats?.totalGainPercent ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+            )}>
+              {formatPercent(portfolioStats?.totalGainPercent ?? 0)}
+            </p>
+            <p className="text-sm text-slate-500 font-medium">תשואה ממוצעת (ROI)</p>
+          </div>
+        </div>
+        <div className="summary-metric flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-6 h-6 text-slate-600" />
+          </div>
+          <div>
+            <p className="financial-value">{portfolioStats?.propertyCount ?? 0}</p>
+            <p className="text-sm text-slate-500 font-medium">חיפושים פעילים</p>
+          </div>
+        </div>
+        <div className="summary-metric flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <AlertTriangle className="w-6 h-6 text-amber-600" />
+          </div>
+          <div>
+            <p className="financial-value">{unreadAlerts.length}</p>
+            <p className="text-sm text-slate-500 font-medium">התראות שוק</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Header + Currency */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-white">דשבורד תיק ההשקעות</h1>
-          <p className="text-slate-400">סקירה כללית של הנכסים שלך</p>
+          <h1 className="text-2xl font-bold text-slate-900">דשבורד תיק ההשקעות</h1>
+          <p className="text-slate-600">סקירה כללית של הנכסים שלך</p>
         </div>
         <div className="flex items-center gap-3">
-          {/* Send Test Email Button */}
           {user?.email && (
             <button
               onClick={handleSendTestEmail}
               disabled={emailSending}
-              className="flex items-center gap-2 px-4 py-2 bg-[#00C805]/20 hover:bg-[#00C805]/30 border border-[#00C805]/50 text-[#00C805] rounded-lg transition-all text-sm font-medium disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-teal-50 hover:bg-teal-100 border border-teal-200 text-teal-700 rounded-xl transition-all text-sm font-medium disabled:opacity-50"
             >
-              {emailSending ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  שולח...
-                </>
-              ) : (
-                <>
-                  <Send className="w-4 h-4" />
-                  שלח אימייל בדיקה
-                </>
-              )}
+              {emailSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              {emailSending ? "שולח..." : "שלח אימייל בדיקה"}
             </button>
           )}
           {emailStatus && (
             <div className={cn(
-              "px-3 py-2 rounded-lg text-sm",
-              emailStatus.success
-                ? "bg-[#00C805]/20 text-[#00C805] border border-[#00C805]/50"
-                : "bg-red-500/20 text-red-400 border border-red-500/50"
+              "px-3 py-2 rounded-xl text-sm",
+              emailStatus.success ? "bg-green-50 text-green-700 border border-green-200" : "bg-red-50 text-red-700 border border-red-200"
             )}>
               {emailStatus.message}
             </div>
           )}
-          <div className="flex items-center gap-2 bg-slate-800 rounded-lg p-1">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-white p-1">
             {(["GBP", "EUR", "ILS"] as CurrencyCode[]).map((curr) => (
               <button
                 key={curr}
                 onClick={() => setDisplayCurrency(curr)}
                 className={cn(
-                  "px-3 py-1.5 rounded-md text-sm font-medium transition-all",
-                  displayCurrency === curr
-                    ? "bg-emerald-500 text-white"
-                    : "text-slate-400 hover:text-white"
+                  "px-3 py-1.5 rounded-lg text-sm font-medium transition-all",
+                  displayCurrency === curr ? "bg-teal-600 text-white" : "text-slate-600 hover:bg-slate-100"
                 )}
               >
                 {CURRENCIES[curr].flag} {curr}
@@ -437,90 +468,67 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats Grid - Bento cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Equity */}
-        <div className="card p-4">
+        <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-              <Wallet className="w-5 h-5 text-emerald-400" />
+            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+              <Wallet className="w-5 h-5 text-teal-600" />
             </div>
             <div className={cn(
-              "flex items-center gap-1 text-sm font-medium",
-              (portfolioStats?.totalGainPercent ?? 0) >= 0 ? "text-emerald-400" : "text-red-400"
+              "flex items-center gap-1 text-sm font-semibold",
+              (portfolioStats?.totalGainPercent ?? 0) >= 0 ? "text-green-600" : "text-red-600"
             )}>
-              {(portfolioStats?.totalGainPercent ?? 0) >= 0 ? (
-                <ArrowUpRight className="w-4 h-4" />
-              ) : (
-                <ArrowDownRight className="w-4 h-4" />
-              )}
+              {(portfolioStats?.totalGainPercent ?? 0) >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
               {formatPercent(portfolioStats?.totalGainPercent ?? 0)}
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
-            {formatCurrency(portfolioStats?.totalEquity ?? 0, displayCurrency)}
-          </p>
-          <p className="text-sm text-slate-400">שווי תיק כולל</p>
+          <p className="financial-value">{formatCurrency(portfolioStats?.totalEquity ?? 0, displayCurrency)}</p>
+          <p className="text-sm text-slate-500 font-medium">שווי תיק כולל</p>
         </div>
-
-        {/* Monthly Income */}
-        <div className="card p-4">
+        <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-              <PiggyBank className="w-5 h-5 text-blue-400" />
+            <div className="w-10 h-10 bg-sky-100 rounded-xl flex items-center justify-center">
+              <PiggyBank className="w-5 h-5 text-sky-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
-            {formatCurrency(portfolioStats?.totalRent ?? 0, displayCurrency)}
-          </p>
-          <p className="text-sm text-slate-400">הכנסה חודשית</p>
+          <p className="financial-value">{formatCurrency(portfolioStats?.totalRent ?? 0, displayCurrency)}</p>
+          <p className="text-sm text-slate-500 font-medium">הכנסה חודשית</p>
         </div>
-
-        {/* Avg Yield */}
-        <div className="card p-4">
+        <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-              <Percent className="w-5 h-5 text-purple-400" />
+            <div className="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+              <Percent className="w-5 h-5 text-teal-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
-            {(portfolioStats?.avgNetYield ?? 0).toFixed(1)}%
-          </p>
-          <p className="text-sm text-slate-400">תשואה נטו ממוצעת</p>
-          <p className="text-xs text-slate-500 mt-1">
-            ({(portfolioStats?.avgGrossYield ?? 0).toFixed(1)}% ברוטו)
-          </p>
+          <p className="financial-value">{(portfolioStats?.avgNetYield ?? 0).toFixed(1)}%</p>
+          <p className="text-sm text-slate-500 font-medium">תשואה נטו ממוצעת</p>
+          <p className="text-xs text-slate-400 mt-1">({(portfolioStats?.avgGrossYield ?? 0).toFixed(1)}% ברוטו)</p>
         </div>
-
-        {/* Properties */}
-        <div className="card p-4">
+        <div className="bento-card p-5">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
-              <Building2 className="w-5 h-5 text-amber-400" />
+            <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center">
+              <Building2 className="w-5 h-5 text-amber-600" />
             </div>
           </div>
-          <p className="text-2xl font-bold text-white">
-            {portfolioStats?.propertyCount ?? 0}
-          </p>
-          <p className="text-sm text-slate-400">נכסים בתיק</p>
-          <div className="flex gap-2 mt-1">
-            <span className="text-xs text-slate-500">
-              🇬🇧 {portfolioAssets?.filter((a) => a?.country === "UK").length || 0}
-            </span>
-            <span className="text-xs text-slate-500">
-              🇨🇾 {portfolioAssets?.filter((a) => a?.country === "Cyprus").length || 0}
-            </span>
+          <p className="financial-value">{portfolioStats?.propertyCount ?? 0}</p>
+          <p className="text-sm text-slate-500 font-medium">נכסים בתיק</p>
+          <div className="flex gap-2 mt-1 text-xs text-slate-400">
+            <span>🇬🇧 {portfolioAssets?.filter((a) => a?.country === "UK").length || 0}</span>
+            <span>🇨🇾 {portfolioAssets?.filter((a) => a?.country === "Cyprus").length || 0}</span>
           </div>
         </div>
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Row - Bento + DoorLoop chart palette */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Portfolio Value Chart */}
-        <div className="lg:col-span-2 card p-4">
+        <div className="lg:col-span-2 bento-card p-5">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-white">מגמת שווי תיק</h3>
-            <div className="flex items-center gap-2 text-sm text-emerald-400">
+            <h3 className="font-semibold text-slate-900">מגמת שווי תיק</h3>
+            <div className={cn(
+              "flex items-center gap-2 text-sm font-semibold",
+              (portfolioStats?.totalGainPercent ?? 0) >= 0 ? "text-green-600" : "text-red-600"
+            )}>
               <TrendingUp className="w-4 h-4" />
               <span>{formatPercent(portfolioStats?.totalGainPercent ?? 0)}</span>
             </div>
@@ -531,22 +539,24 @@ export default function Dashboard() {
                 <AreaChart data={portfolioValueChart}>
                 <defs>
                   <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#0d9488" stopOpacity={0.25} />
+                    <stop offset="95%" stopColor="#0d9488" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="date" stroke="#64748b" fontSize={12} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                <XAxis dataKey="date" stroke="#64748b" fontSize={12} tick={{ fill: "#64748b" }} />
                 <YAxis
                   stroke="#64748b"
                   fontSize={12}
+                  tick={{ fill: "#64748b" }}
                   tickFormatter={(v) => `${currencySymbol}${(v / 1000).toFixed(0)}k`}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: "#1e293b",
-                    border: "1px solid #334155",
-                    borderRadius: "8px",
+                    backgroundColor: "#fff",
+                    border: "1px solid #e2e8f0",
+                    borderRadius: "12px",
+                    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.07)",
                   }}
                   formatter={(value) =>
                     formatCurrency(Number(value) || 0, displayCurrency)

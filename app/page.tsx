@@ -2,13 +2,16 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar, { type PageId } from "./components/Sidebar";
+import { motion, AnimatePresence } from "framer-motion";
+import Sidebar, { type PageId, SIDEBAR_WIDTH } from "./components/Sidebar";
+import TopHeader from "./components/TopHeader";
 import Dashboard from "./components/pages/Dashboard";
 import MyProperties from "./components/pages/MyProperties";
 import MarketExplorer from "./components/pages/MarketExplorer";
 import NewsPage from "./components/pages/NewsPage";
 import AlertsPanel from "./components/AlertsPanel";
 import AreaRadar from "./components/AreaRadar";
+import ChatInterface from "./components/ChatInterface";
 import { ALERTS } from "./lib/data";
 import { useAuth, getUserData } from "./lib/auth";
 
@@ -16,7 +19,7 @@ export default function App() {
   const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [currentPage, setCurrentPage] = useState<PageId>("dashboard");
+  const [currentPage, setCurrentPage] = useState<PageId>("insights");
   const [isAlertsPanelOpen, setIsAlertsPanelOpen] = useState(false);
   const [isRadarOpen, setIsRadarOpen] = useState(false);
   const [radarAlertCount, setRadarAlertCount] = useState(0);
@@ -62,24 +65,30 @@ export default function App() {
     setCurrentPage(page);
   }, []);
 
-  // Handle radar deal click - navigate to explorer with the property
-  const handleRadarDealClick = useCallback((postcode: string, address: string) => {
+  const handleRadarDealClick = useCallback((_postcode?: string, _address?: string) => {
     setIsRadarOpen(false);
-    setCurrentPage("explorer");
-    // Could pass the postcode to MarketExplorer via context/state if needed
+    setCurrentPage("insights");
   }, []);
 
-  // Render current page
+  const PAGE_BREADCRUMBS: Record<PageId, { label: string; href?: string }[]> = {
+    portfolio: [{ label: "InvestIntel", href: "/" }, { label: "תיק השקעות" }],
+    insights: [{ label: "InvestIntel", href: "/" }, { label: "תובנות" }],
+    settings: [{ label: "InvestIntel", href: "/" }, { label: "הגדרות" }],
+  };
+
   const renderPage = () => {
     switch (currentPage) {
-      case "dashboard":
-        return <Dashboard />;
-      case "properties":
+      case "portfolio":
         return <MyProperties />;
-      case "explorer":
-        return <MarketExplorer />;
-      case "news":
-        return <NewsPage />;
+      case "insights":
+        return <Dashboard />;
+      case "settings":
+        return (
+          <div className="bento-card p-8 max-w-xl">
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">הגדרות</h2>
+            <p className="text-slate-600">הגדרות מערכת יופיעו כאן.</p>
+          </div>
+        );
       default:
         return <Dashboard />;
     }
@@ -88,10 +97,10 @@ export default function App() {
   // Show loading or redirect if not authenticated
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#0B0E14] flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
         <div className="text-center">
-          <div className="w-12 h-12 border-4 border-[#00C805] border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-400 text-sm">טוען...</p>
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-600 text-sm">טוען...</p>
         </div>
       </div>
     );
@@ -102,23 +111,34 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0B0E14]" dir="rtl">
-      {/* Sidebar */}
-      <Sidebar
-        currentPage={currentPage}
-        onPageChange={handlePageChange}
-        notificationCount={unreadCount}
-        radarAlertCount={radarAlertCount}
-        onAlertsClick={() => setIsAlertsPanelOpen(true)}
-        onRadarClick={() => setIsRadarOpen(true)}
-      />
+    <div className="min-h-screen bg-slate-50" dir="rtl">
+      {/* Fixed sidebar: Portfolio, Insights, Settings - layout shifts with sidebar width */}
+      <Sidebar currentPage={currentPage} onPageChange={handlePageChange} />
 
-      {/* Main Content */}
-      <main className="mr-64 min-h-screen">
-        <div className="p-6 h-full">
-          {renderPage()}
-        </div>
-      </main>
+      {/* Main content area: margin matches sidebar so content does not sit under it */}
+      <div
+        className="min-h-screen flex flex-col transition-[margin-left] duration-300 ease-in-out"
+        style={{ marginLeft: SIDEBAR_WIDTH }}
+      >
+        <TopHeader
+          breadcrumbs={PAGE_BREADCRUMBS[currentPage]}
+          notificationCount={unreadCount}
+        />
+        <main className="flex-1 p-6">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentPage}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="h-full"
+            >
+              {renderPage()}
+            </motion.div>
+          </AnimatePresence>
+        </main>
+      </div>
 
       {/* Alerts Panel */}
       <AlertsPanel
@@ -132,6 +152,9 @@ export default function App() {
         onClose={() => setIsRadarOpen(false)}
         onDealClick={handleRadarDealClick}
       />
+
+      {/* AI Chat */}
+      <ChatInterface isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
     </div>
   );
 }

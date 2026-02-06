@@ -24,15 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" className="dark" style={{ backgroundColor: '#0B0E14' }}>
+    <html lang="he" dir="rtl" className={inter.variable}>
       <body
-        className={`${inter.variable} ${rubik.variable} antialiased`}
-        style={{ 
-          backgroundColor: '#0B0E14', 
-          color: '#E8EAED',
-          minHeight: '100vh',
-          fontFamily: 'Inter, var(--font-inter), var(--font-rubik), system-ui, sans-serif'
-        }}
+        className={`${inter.variable} ${rubik.variable} font-sans antialiased min-h-screen text-slate-900`}
+        style={{ fontFamily: 'var(--font-inter), Inter, var(--font-rubik), system-ui, sans-serif' }}
       >
         <Providers>
           {children}

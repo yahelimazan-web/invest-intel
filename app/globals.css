@@ -768,3 +768,72 @@ button,
   background-color: #2D333F;
   border-color: #00C805;
 }
+
+/* ======================== */
+/* DOORLOOP STYLE - Light UI */
+/* ======================== */
+
+/* Bento box cards - light, clean */
+.bento-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.bento-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07);
+}
+
+/* Financial figure emphasis */
+.financial-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* Summary ribbon metric box */
+.summary-metric {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.05);
+}
+
+/* Pill filter - DoorLoop style */
+.pill-filter {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #64748b;
+}
+
+.pill-filter:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.pill-filter.active {
+  background: #0d9488;
+  color: #ffffff;
+  border-color: #0d9488;
+}
+
+/* Chart palette - DoorLoop / Premium Fintech */
+.chart-primary { fill: #0d9488; }
+.chart-secondary { fill: #0ea5e9; }
+.chart-success { fill: #22c55e; }
+.chart-danger { fill: #ef4444; }
+.chart-warning { fill: #f59e0b; }
+.chart-muted { fill: #94a3b8; }
