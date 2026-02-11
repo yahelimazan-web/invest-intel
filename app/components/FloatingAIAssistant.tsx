@@ -8,10 +8,10 @@ import type { PageId } from "./Sidebar";
 // Quick suggestions per page. Private context (property + documents) vs public (market) is
 // applied when sending to AI: dashboard/portfolio use private; market-analysis/ai-analyst support both.
 const QUICK_SUGGESTIONS: Record<PageId, [string, string, string]> = {
-  dashboard: ["מה שווי התיק שלי?", "הראה תזרים חודשי", "האם יש התראות?"],
-  portfolio: ["מתי נגמר החוזה שלי?", "סכם את הנכסים שלי", "שכר דירה ממוצע ליברפול"],
-  "market-analysis": ["מה מגמת השוק?", "השווה אזורים", "המלצות השקעה"],
-  "ai-analyst": ["נתח את התיק שלי", "זהה חריגות במסמכים", "דווח שוק"],
+  dashboard: ["What is my portfolio value?", "Show monthly cashflow", "Any alerts?"],
+  portfolio: ["When does my tenancy end?", "Summarise my properties", "Average rent for Liverpool"],
+  "market-analysis": ["What is market trend?", "Compare areas", "Investment recommendations"],
+  "ai-analyst": ["Analyse my portfolio", "Identify document anomalies", "Market report"],
 };
 
 interface Message {
@@ -46,14 +46,12 @@ export default function FloatingAIAssistant({
     if (!t) return;
     setInput("");
     setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", text: t }]);
-    // Placeholder: in production, call AI with private context (property data, uploaded docs)
-    // for dashboard/portfolio and public context (market data) for general questions.
     setMessages((prev) => [
       ...prev,
       {
         id: crypto.randomUUID(),
         role: "assistant",
-        text: "זו תשובת דמו. חיבור ל-AI עם הקשר פרטי (נכסים ומסמכים) והקשר ציבורי (שוק) יופעל בהמשך.",
+        text: "This is a demo response. AI integration with private context (properties & documents) and public context (market) will be enabled later.",
       },
     ]);
   };
@@ -70,10 +68,9 @@ export default function FloatingAIAssistant({
         left: "max(1rem, env(safe-area-inset-left))",
         bottom: "max(1rem, env(safe-area-inset-bottom))",
       }}
-      dir="rtl"
-      aria-label="עוזר AI צף"
+      dir="ltr"
+      aria-label="Floating AI assistant"
     >
-      {/* Chat window - glassmorphism, slim sidebar-style */}
       {isOpen && (
         <div
           className={cn(
@@ -84,20 +81,20 @@ export default function FloatingAIAssistant({
             "mb-3"
           )}
           role="dialog"
-          aria-label="חלון צ'אט עוזר AI"
+          aria-label="AI Chat window"
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-teal-500/30 flex items-center justify-center">
                 <Bot className="w-4 h-4 text-teal-300" aria-hidden />
               </div>
-              <span className="text-sm font-semibold text-slate-100">עוזר InvestIntel</span>
+              <span className="text-sm font-semibold text-slate-100">InvestIntel Assistant</span>
             </div>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               className="p-2 text-slate-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-              aria-label="מזער"
+              aria-label="Minimise"
             >
               <Minimize2 className="w-4 h-4" />
             </button>
@@ -106,22 +103,22 @@ export default function FloatingAIAssistant({
           <div className="flex-1 overflow-y-auto min-h-[120px] p-4 space-y-3">
             {messages.length === 0 && (
               <div className="text-center py-4">
-                <p className="text-sm text-slate-400 mb-4">שאל על נכסים פרטיים (למשל תאריך סיום חוזה) או על שוק (למשל שכר דירה ממוצע באזור).</p>
-                <p className="text-xs text-slate-500 mb-3">הצעות מהירות:</p>
+                <p className="text-sm text-slate-400 mb-4">Ask about your properties (e.g. tenancy end date) or market data (e.g. average rent by area).</p>
+                <p className="text-xs text-slate-500 mb-3">Quick suggestions:</p>
                 <div className="flex flex-col gap-2">
                   {suggestions.map((s, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => handleSend(s)}
-                      className="text-right text-sm px-3 py-2 rounded-xl bg-white/10 text-slate-200 hover:bg-white/15 border border-white/10 transition-colors"
+                      className="text-left text-sm px-3 py-2 rounded-xl bg-white/10 text-slate-200 hover:bg-white/15 border border-white/10 transition-colors"
                     >
                       {s}
                     </button>
                   ))}
                 </div>
                 {privateContextHint && (
-                  <p className="text-xs text-slate-500 mt-3">תשובות מבוססות על הנכסים והמסמכים שלך.</p>
+                  <p className="text-xs text-slate-500 mt-3">Answers based on your properties and documents.</p>
                 )}
               </div>
             )}
@@ -131,8 +128,8 @@ export default function FloatingAIAssistant({
                 className={cn(
                   "text-sm max-w-[90%] rounded-xl px-3 py-2",
                   m.role === "user"
-                    ? "mr-0 ml-auto bg-teal-500/30 text-slate-100"
-                    : "ml-0 mr-auto bg-white/10 text-slate-200 border border-white/10"
+                    ? "ml-0 mr-auto bg-teal-500/30 text-slate-100"
+                    : "mr-0 ml-auto bg-white/10 text-slate-200 border border-white/10"
                 )}
               >
                 {m.text}
@@ -147,14 +144,14 @@ export default function FloatingAIAssistant({
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="כתוב הודעה..."
+                placeholder="Type a message..."
                 className="flex-1 min-w-0 rounded-xl bg-white/10 border border-white/10 px-4 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-teal-400/50 focus:border-teal-400/50"
-                aria-label="הודעת צ'אט"
+                aria-label="Chat message"
               />
               <button
                 type="submit"
                 className="p-2.5 rounded-xl bg-teal-500 hover:bg-teal-400 text-white shrink-0 transition-colors"
-                aria-label="שלח"
+                aria-label="Send"
               >
                 <Send className="w-4 h-4" />
               </button>
@@ -163,7 +160,6 @@ export default function FloatingAIAssistant({
         </div>
       )}
 
-      {/* FAB */}
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -174,7 +170,7 @@ export default function FloatingAIAssistant({
           "focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-50"
         )}
         aria-expanded={isOpen}
-        aria-label={isOpen ? "סגור עוזר AI" : "פתח עוזר AI"}
+        aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
       >
         {isOpen ? (
           <X className="w-6 h-6 text-slate-300" aria-hidden />

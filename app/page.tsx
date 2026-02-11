@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Wallet, Percent, Banknote, Gauge, ChevronDown, Calendar, FolderOpen, ArrowRight, Pencil } from "lucide-react";
+import { Wallet, Percent, Banknote, Gauge, ChevronDown, Calendar, FolderOpen, ArrowRight, Pencil, Upload } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -15,7 +15,8 @@ import {
 import { cn } from "./lib/utils";
 import Sidebar, { type PageId, SIDEBAR_WIDTH } from "./components/Sidebar";
 import PropertyDocumentUploadZone from "./components/PropertyDocumentUploadZone";
-import PropertyEditModal, { type PortfolioProperty } from "./components/PropertyEditModal";
+import PropertyEditModal, { type PortfolioProperty, type PropertyEnrichment } from "./components/PropertyEditModal";
+import PropertyCardImage from "./components/PropertyCardImage";
 import FloatingAIAssistant from "./components/FloatingAIAssistant";
 import MarketBenchCard from "./components/MarketBenchCard";
 import {
@@ -23,26 +24,16 @@ import {
   runBenchmark,
   type BenchmarkResult,
 } from "./lib/market-benchmark";
+import { fetchEnrichmentForPortfolio } from "./lib/property-enrichment";
+import { useAuth } from "./lib/auth";
 
-// Sample portfolio properties (Property A Israel, Property B UK)
+// Sample portfolio properties (UK only)
 const INITIAL_PORTFOLIO: PortfolioProperty[] = [
-  {
-    id: "prop-il-1",
-    title: "דיזנגוף 120, תל אביב",
-    address: "דיזנגוף 120, תל אביב",
-    image: null,
-    monthlyRent: 8500,
-    annualYieldPercent: 3.2,
-    purchasePrice: 3_200_000,
-    purchasePriceCurrency: "ILS",
-    purchaseDate: "2021-01-01",
-    status: "rented",
-    country: "IL",
-  },
   {
     id: "prop-uk-1",
     title: "42 Penny Lane, Liverpool",
     address: "42 Penny Lane, Liverpool",
+    postcode: "L18",
     image: null,
     monthlyRent: 950,
     annualYieldPercent: 6.8,
@@ -52,14 +43,26 @@ const INITIAL_PORTFOLIO: PortfolioProperty[] = [
     status: "needs_attention",
     country: "UK",
   },
+  {
+    id: "prop-uk-2",
+    title: "12 James Holt Avenue, Liverpool",
+    address: "12 James Holt Avenue, Liverpool",
+    postcode: "L18",
+    image: null,
+    monthlyRent: 850,
+    annualYieldPercent: 5.2,
+    purchasePrice: 180_000,
+    purchasePriceCurrency: "GBP",
+    purchaseDate: "2022-11-20",
+    status: "rented",
+    country: "UK",
+  },
 ];
 
-// Deterministic formatting (no locale) to avoid hydration mismatch between server and client
-function formatPropertyCurrency(value: number, currency: "ILS" | "GBP" | "EUR"): string {
+// Deterministic formatting (no locale) to avoid hydration mismatch. UK app — GBP only.
+function formatPropertyCurrency(value: number, _currency: "GBP"): string {
   const n = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  if (currency === "ILS") return `₪${n}`;
-  if (currency === "GBP") return `£${n}`;
-  return `€${n}`;
+  return `£${n}`;
 }
 
 function formatPropertyDate(iso: string): string {
@@ -67,12 +70,7 @@ function formatPropertyDate(iso: string): string {
   return `${d}/${m}/${y}`;
 }
 
-/** Image URL for card: use prop.image or a map/street-style placeholder by address. */
-function getPropertyCardImageUrl(prop: PortfolioProperty): string {
-  if (prop.image) return prop.image;
-  const seed = encodeURIComponent(prop.address || prop.id);
-  return `https://picsum.photos/seed/${seed}/400/300`;
-}
+/** Property cards use Street View → Static Map → OSM Map. No generic photos. */
 
 // Placeholder KPI data (no real data yet)
 const KPI = {
@@ -86,7 +84,7 @@ const KPI = {
 type ChartMetric = "portfolio-value" | "cashflow" | "yield";
 
 // Placeholder 12-month data — deterministic (no Math.random) to avoid hydration mismatch
-const MONTHS = ["ינו", "פבר", "מרץ", "אפר", "מאי", "יונ", "יול", "אוג", "ספט", "אוק", "נוב", "דצמ"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 const CHART_DATA_PORTFOLIO = MONTHS.map((month, i) => ({
   month,
@@ -114,9 +112,9 @@ function healthScoreRing(score: number) {
 }
 
 const CHART_METRIC_OPTIONS: { value: ChartMetric; label: string }[] = [
-  { value: "portfolio-value", label: "שווי פורטפוליו" },
-  { value: "cashflow", label: "תזרים מזומנים" },
-  { value: "yield", label: "תשואה שנתית" },
+  { value: "portfolio-value", label: "Portfolio Value" },
+  { value: "cashflow", label: "Cashflow" },
+  { value: "yield", label: "Annual Yield" },
 ];
 
 type ChartRange = "1M" | "6M" | "1Y" | "custom";
@@ -151,10 +149,13 @@ function AppContent() {
   const [propertyForDocs, setPropertyForDocs] = useState<{ id: string; name: string } | null>(null);
   const [viewPropertyId, setViewPropertyId] = useState<string | null>(null);
   const [editingProperty, setEditingProperty] = useState<PortfolioProperty | null>(null);
+  const [propertyEnrichment, setPropertyEnrichment] = useState<Record<string, PropertyEnrichment>>({});
 
   // Market Analysis: benchmark results (Comparison Engine)
   const [benchmarkResults, setBenchmarkResults] = useState<Record<string, BenchmarkResult>>({});
   const [benchmarkReady, setBenchmarkReady] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<{ [key: string]: "idle" | "uploading" | "success" | "error" }>({});
+  const { user } = useAuth();
 
   // Open portfolio view when visiting /?view=portfolio (e.g. redirect from /portfolio)
   useEffect(() => {
@@ -162,6 +163,16 @@ function AppContent() {
     if (view === "portfolio") setCurrentPage("portfolio");
     if (view === "market-analysis") setCurrentPage("market-analysis");
   }, [searchParams]);
+
+  // Fetch property enrichment (Street View, EPC, Land Registry) when viewing portfolio
+  useEffect(() => {
+    if (currentPage !== "portfolio" || portfolioProperties.length === 0) return;
+    let cancelled = false;
+    fetchEnrichmentForPortfolio(portfolioProperties).then((data) => {
+      if (!cancelled) setPropertyEnrichment(data);
+    });
+    return () => { cancelled = true; };
+  }, [currentPage, portfolioProperties]);
 
   // Run market benchmarks for properties with mapped areas
   useEffect(() => {
@@ -172,7 +183,7 @@ function AppContent() {
       for (const prop of portfolioProperties) {
         const areaKey = mapPropertyToArea(prop.id, prop.country, prop.address, prop.title);
         if (!areaKey) continue;
-        const b = await runBenchmark(areaKey, prop.monthlyRent, prop.purchasePriceCurrency);
+        const b = await runBenchmark(areaKey, prop.monthlyRent, "GBP");
         if (!cancelled) results[prop.id] = b;
       }
       if (!cancelled) {
@@ -217,13 +228,44 @@ function AppContent() {
     return (v: number) => `£${(v / 1000).toFixed(0)}k`;
   }, [chartMetric]);
 
+  const handleDocumentsUpload = useCallback(
+    async (propertyId: string, category: string, files: File[], displayName?: string) => {
+      const userId = user?.id ?? "anon";
+      setUploadStatus((s) => ({ ...s, [propertyId]: "uploading" }));
+      try {
+        const folderId = category;
+        const tags = displayName ? [displayName] : [];
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("propertyId", propertyId);
+          formData.append("folderId", folderId);
+          formData.append("userId", userId);
+          formData.append("tags", JSON.stringify(tags));
+          const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({}));
+            throw new Error(data.error || "Upload failed");
+          }
+        }
+        setUploadStatus((s) => ({ ...s, [propertyId]: "success" }));
+        setTimeout(() => setUploadStatus((s) => ({ ...s, [propertyId]: "idle" })), 2000);
+      } catch (err) {
+        console.error("[Documents] Upload error:", err);
+        setUploadStatus((s) => ({ ...s, [propertyId]: "error" }));
+        setTimeout(() => setUploadStatus((s) => ({ ...s, [propertyId]: "idle" })), 3000);
+      }
+    },
+    [user?.id]
+  );
+
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
+    <div className="min-h-screen bg-slate-50" dir="ltr">
       <Sidebar currentPage={currentPage} onPageChange={handlePageChange} />
 
       <main
         className="min-h-screen flex-1 min-w-0 bg-slate-50"
-        style={{ marginRight: SIDEBAR_WIDTH }}
+        style={{ marginLeft: SIDEBAR_WIDTH }}
       >
         {currentPage === "dashboard" && (
           <div className="p-8">
@@ -235,7 +277,7 @@ function AppContent() {
                   <Wallet className="w-5 h-5" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-500 mb-1">שווי תיק</p>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Portfolio Value</p>
                   <p className="text-2xl font-semibold text-slate-900 tracking-tight">
                     {KPI.portfolioValue}
                   </p>
@@ -255,7 +297,7 @@ function AppContent() {
                   <Percent className="w-5 h-5" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-500 mb-1">תשואה ממוצעת</p>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Avg. Yield</p>
                   <p className="text-2xl font-semibold text-slate-900 tracking-tight">
                     {KPI.avgYield}
                   </p>
@@ -268,7 +310,7 @@ function AppContent() {
                   <Banknote className="w-5 h-5" aria-hidden />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-500 mb-1">מזומן נטו חודשי</p>
+                  <p className="text-sm font-medium text-slate-500 mb-1">Monthly Net Cashflow</p>
                   <p className="text-2xl font-semibold text-slate-900 tracking-tight">
                     {KPI.monthlyNetCashflow}
                   </p>
@@ -323,23 +365,22 @@ function AppContent() {
                       }`}
                       aria-expanded={isDatePickerOpen}
                       aria-haspopup="dialog"
-                      aria-label="בחר תאריכים"
+                      aria-label="Select dates"
                     >
                       <Calendar className="w-4 h-4" aria-hidden />
-                      <span>בחר תאריכים</span>
+                      <span>Select dates</span>
                     </button>
                     {isDatePickerOpen && (
                       <div
                         ref={datePickerRef}
                         role="dialog"
-                        aria-label="בחירת טווח תאריכים"
+                        aria-label="Date range selection"
                         className="absolute top-full mt-2 left-0 z-50 min-w-[280px] rounded-xl border border-slate-200 bg-white p-4 shadow-lg"
-                        dir="rtl"
-                      >
+                        >
                         <div className="space-y-4">
                           <div>
                             <label htmlFor="chart-start-date" className="block text-sm font-medium text-slate-700 mb-1">
-                              תאריך התחלה
+                              Start date
                             </label>
                             <input
                               id="chart-start-date"
@@ -351,7 +392,7 @@ function AppContent() {
                           </div>
                           <div>
                             <label htmlFor="chart-end-date" className="block text-sm font-medium text-slate-700 mb-1">
-                              תאריך סיום
+                              End date
                             </label>
                             <input
                               id="chart-end-date"
@@ -366,7 +407,7 @@ function AppContent() {
                             onClick={applyCustomRange}
                             className="w-full rounded-lg bg-teal-600 py-2 text-sm font-medium text-white hover:bg-teal-700 transition-colors"
                           >
-                            החל
+                            Apply
                           </button>
                         </div>
                       </div>
@@ -379,7 +420,7 @@ function AppContent() {
                     value={chartMetric}
                     onChange={(e) => setChartMetric(e.target.value as ChartMetric)}
                     className="appearance-none rounded-lg border border-slate-200 bg-slate-50 py-2 pl-4 pr-9 text-sm font-medium text-slate-700 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    aria-label="בחירת מדד גרף"
+                    aria-label="Chart metric"
                   >
                     {CHART_METRIC_OPTIONS.map((opt) => (
                       <option key={opt.value} value={opt.value}>
@@ -407,7 +448,7 @@ function AppContent() {
                       tickMargin={8}
                     />
                     <YAxis
-                      orientation="right"
+                      orientation="left"
                       axisLine={false}
                       tickLine={false}
                       tick={{ fill: "#64748b", fontSize: 12 }}
@@ -439,59 +480,59 @@ function AppContent() {
             {/* Action Center — Today-only; not affected by date range filters */}
             <div className="mt-10">
               <p className="text-sm text-slate-500 mb-2">
-                שלום, מאז הביקור האחרון שלך השתנו 3 דברים בתיק
+                Since your last visit, 3 things have changed in your portfolio
               </p>
               <h3 className="text-lg font-semibold text-slate-900 mb-1">
-                דורש תשומת לב ותובנות
+                Needs attention & insights
               </h3>
-              <p className="text-xs text-slate-400 mb-6">היום בלבד — לא מושפע מפילטרי תאריך</p>
+              <p className="text-xs text-slate-400 mb-6">Today only — not affected by date filters</p>
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Card 1 — Critical: yield drop */}
                 <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-4">
                   <div>
-                    <span className="text-xs font-medium text-red-600">קריטי</span>
-                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">ירידה בתשואה</h4>
+                    <span className="text-xs font-medium text-red-600">Critical</span>
+                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">Yield drop</h4>
                     <p className="text-sm text-slate-600 mt-1">
-                      נכס מסוים ירד מתחת ל benchmark האזורי. כדאי לבדוק.
+                      A property has fallen below the regional benchmark. Worth checking.
                     </p>
                   </div>
                   <button
                     type="button"
                     className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                   >
-                    בדוק עכשיו
+                    Check now
                   </button>
                 </div>
                 {/* Card 2 — Insight: upgrade opportunity */}
                 <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-4">
                   <div>
-                    <span className="text-xs font-medium text-amber-600">תובנה</span>
-                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">הזדמנות שדרוג</h4>
+                    <span className="text-xs font-medium text-amber-600">Insight</span>
+                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">Upgrade opportunity</h4>
                     <p className="text-sm text-slate-600 mt-1">
-                      שיפוץ קל בנכס B עשוי להעלות את השכירות ב-12%.
+                      Light refurbishment on Property B could raise rent by 12%.
                     </p>
                   </div>
                   <button
                     type="button"
                     className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                   >
-                    בדוק עכשיו
+                    Check now
                   </button>
                 </div>
                 {/* Card 3 — Task: missing data */}
                 <div className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-4">
                   <div>
-                    <span className="text-xs font-medium text-slate-500">משימה</span>
-                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">נתונים חסרים</h4>
+                    <span className="text-xs font-medium text-slate-500">Task</span>
+                    <h4 className="text-base font-semibold text-slate-900 mt-0.5">Missing data</h4>
                     <p className="text-sm text-slate-600 mt-1">
-                      חסר מסמך EPC לנכס C.
+                      EPC document missing for Property C.
                     </p>
                   </div>
                   <button
                     type="button"
                     className="self-start text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors"
                   >
-                    בדוק עכשיו
+                    Check now
                   </button>
                 </div>
               </div>
@@ -509,44 +550,79 @@ function AppContent() {
                   className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-teal-600 mb-6"
                 >
                   <ArrowRight className="w-4 h-4" aria-hidden />
-                  חזרה לתיק הנכסים
+                  Back to portfolio
                 </button>
                 {(() => {
                   const prop = portfolioProperties.find((p) => p.id === viewPropertyId);
                   if (!prop) return null;
                   return (
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
-                      <h1 className="text-xl font-semibold text-slate-900">{prop.title}</h1>
-                      <p className="text-slate-500 mt-1">{prop.address}</p>
-                      <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-slate-500">תזרים חודשי</span>
-                          <div className="font-medium text-slate-900">
-                            {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">תשואה שנתית</span>
-                          <div className="font-medium text-slate-900">{prop.annualYieldPercent}%</div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">מחיר קנייה</span>
-                          <div className="font-medium text-slate-900">
-                            {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}
-                          </div>
-                        </div>
-                        <div>
-                          <span className="text-slate-500">תאריך קנייה</span>
-                          <div className="font-medium text-slate-900">{formatPropertyDate(prop.purchaseDate)}</div>
-                        </div>
-                      </div>
+                      {(() => {
+                        const enrich = propertyEnrichment[prop.id];
+                        return (
+                          <>
+                            <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 aspect-[4/3]">
+                              <PropertyCardImage prop={prop} enrichment={enrich} alt={`${prop.title} — street view or map`} className="w-full h-full object-cover" />
+                            </div>
+                            <h1 className="text-xl font-semibold text-slate-900">{prop.title}</h1>
+                            <p className="text-slate-500 mt-1">{prop.address}</p>
+                            <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-slate-500">Monthly cashflow</span>
+                                <div className="font-medium text-slate-900">
+                                  {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Annual yield</span>
+                                <div className="font-medium text-slate-900">{prop.annualYieldPercent}%</div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Purchase price</span>
+                                <div className="font-medium text-slate-900">
+                                  {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Purchase date</span>
+                                <div className="font-medium text-slate-900">{formatPropertyDate(prop.purchaseDate)}</div>
+                              </div>
+                              {enrich && (
+                                <>
+                                  {enrich.epcRating && (
+                                    <div>
+                                      <span className="text-slate-500">EPC rating</span>
+                                      <div className="font-medium text-slate-900">{enrich.epcRating}</div>
+                                    </div>
+                                  )}
+                                  {enrich.propertyType && (
+                                    <div>
+                                      <span className="text-slate-500">Property type</span>
+                                      <div className="font-medium text-slate-900">{enrich.propertyType}</div>
+                                    </div>
+                                  )}
+                                  {enrich.lastSoldPrice != null && (
+                                    <div className="col-span-2">
+                                      <span className="text-slate-500">Last sold (Land Registry)</span>
+                                      <div className="font-medium text-slate-900">
+                                        {formatPropertyCurrency(enrich.lastSoldPrice, prop.purchasePriceCurrency)}
+                                        {enrich.lastSoldDate && ` — ${enrich.lastSoldDate}`}
+                                      </div>
+                                    </div>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                       <span
                         className={cn(
                           "inline-block mt-4 px-3 py-1 rounded-full text-xs font-medium",
                           prop.status === "rented" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                         )}
                       >
-                        {prop.status === "rented" ? "מושכר" : "דורש טיפול"}
+                        {prop.status === "rented" ? "Rented" : "Needs attention"}
                       </span>
                     </div>
                   );
@@ -554,15 +630,15 @@ function AppContent() {
               </div>
             ) : (
               <>
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">תיק הנכסים שלי</h1>
-                <p className="text-slate-600 mb-6">נכסים ומסמכים</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">My Portfolio</h1>
+                <p className="text-slate-600 mb-6">Properties & documents</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {portfolioProperties.map((prop) => (
                     <div
                       key={prop.id}
                       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative"
                     >
-                      {/* Top-right: Documents (folder) + Edit (pencil) - always visible on card */}
+                      {/* Top-right: Documents (folder) + Upload Documents + Edit (pencil) — card-level only */}
                       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                         <button
                           type="button"
@@ -571,9 +647,22 @@ function AppContent() {
                             e.stopPropagation();
                             setPropertyForDocs({ id: prop.id, name: prop.title });
                           }}
-                          aria-label="מסמכים"
+                          aria-label="Documents"
                         >
                           <FolderOpen className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-colors border border-teal-500/50 text-xs font-medium"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setPropertyForDocs({ id: prop.id, name: prop.title });
+                          }}
+                          aria-label="Upload documents"
+                          disabled={uploadStatus[prop.id] === "uploading"}
+                        >
+                          <Upload className="w-4 h-4 shrink-0" aria-hidden />
+                          <span className="hidden sm:inline">Upload Documents</span>
                         </button>
                         <button
                           type="button"
@@ -582,52 +671,52 @@ function AppContent() {
                             e.stopPropagation();
                             setEditingProperty(prop);
                           }}
-                          aria-label="ערוך נכס"
+                          aria-label="Edit property"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                       </div>
                       <button
                         type="button"
-                        className="block w-full text-right focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset rounded-t-xl"
+                        className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset rounded-t-xl"
                         onClick={() => setViewPropertyId(prop.id)}
-                        aria-label={`עבור לנכס ${prop.title}`}
+                        aria-label={`View property ${prop.title}`}
                       >
                         <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden relative">
-                          <img
-                            src={getPropertyCardImageUrl(prop)}
-                            alt=""
+                          <PropertyCardImage
+                            prop={prop}
+                            enrichment={propertyEnrichment[prop.id]}
+                            alt={`${prop.title} — street view or map`}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const el = e.currentTarget;
-                              el.onerror = null;
-                              el.style.display = "none";
-                              const wrap = el.parentElement;
-                              if (wrap && !wrap.querySelector(".img-fallback")) {
-                                const fallback = document.createElement("div");
-                                fallback.className = "img-fallback absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300";
-                                wrap.style.position = "relative";
-                                wrap.appendChild(fallback);
-                              }
-                            }}
                           />
                         </div>
-                        <div className="p-4 text-right">
+                        <div className="p-4 text-left">
                           <span
                             className={cn(
                               "inline-block mb-2 px-2.5 py-0.5 rounded-full text-xs font-medium",
                               prop.status === "rented" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700"
                             )}
                           >
-                            {prop.status === "rented" ? "מושכר" : "דורש טיפול"}
+                            {prop.status === "rented" ? "Rented" : "Needs attention"}
                           </span>
                           <h2 className="font-semibold text-slate-900">{prop.title}</h2>
                           <p className="text-sm text-slate-500 mt-0.5">{prop.address}</p>
                           <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
-                            <span>תזרים: {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}</span>
-                            <span>תשואה: {prop.annualYieldPercent}%</span>
-                            <span className="col-span-2">מחיר קנייה: {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}</span>
-                            <span className="col-span-2">תאריך קנייה: {formatPropertyDate(prop.purchaseDate)}</span>
+                            <span>Cashflow: {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}</span>
+                            <span>Yield: {prop.annualYieldPercent}%</span>
+                            <span className="col-span-2">Purchase: {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}</span>
+                            <span className="col-span-2">Purchased: {formatPropertyDate(prop.purchaseDate)}</span>
+                            {(() => {
+                              const e = propertyEnrichment[prop.id];
+                              if (!e) return null;
+                              return (
+                                <>
+                                  {e.epcRating && <span className="col-span-2">EPC: <span className="font-semibold">{e.epcRating}</span></span>}
+                                  {e.propertyType && <span>Type: {e.propertyType}</span>}
+                                  {e.lastSoldPrice != null && <span>Last sold: {formatPropertyCurrency(e.lastSoldPrice, prop.purchasePriceCurrency)}{e.lastSoldDate ? ` (${e.lastSoldDate})` : ""}</span>}
+                                </>
+                              );
+                            })()}
                           </div>
                         </div>
                       </button>
@@ -639,10 +728,10 @@ function AppContent() {
                             setPropertyForDocs({ id: prop.id, name: prop.title });
                           }}
                           className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-teal-600 hover:bg-slate-50 rounded-lg transition-colors"
-                          aria-label="מסמכים"
+                          aria-label="Upload documents"
                         >
-                          <FolderOpen className="w-4 h-4 text-slate-400" aria-hidden />
-                          מסמכים
+                          <Upload className="w-4 h-4 text-slate-400" aria-hidden />
+                          Upload Documents
                         </button>
                       </div>
                     </div>
@@ -657,14 +746,14 @@ function AppContent() {
           <div className="p-8">
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-2">ניתוח שוק</h1>
-                <p className="text-slate-600">השוואת השכירות שלך לממוצע שוק — זיהוי הזדמנויות</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">Market Insights</h1>
+                <p className="text-slate-600">Compare your rent to market average — identify opportunities</p>
               </div>
               <Link
                 href="/market-analysis"
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors"
               >
-                ניתוח שוק אסטרטגי — ישראל / אנגליה
+                Strategic Market Analysis — UK Postcodes
               </Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -680,7 +769,7 @@ function AppContent() {
             </div>
             {benchmarkReady && Object.keys(benchmarkResults).length === 0 && (
               <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
-                אין נכסים מתוחזרים לאזורים נתמכים (L18 Liverpool, מרכז תל אביב)
+                No properties mapped to supported UK postcodes (e.g. L18 Liverpool)
               </div>
             )}
           </div>
@@ -688,19 +777,19 @@ function AppContent() {
 
         {currentPage === "ai-analyst" && (
           <div className="p-8">
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">אנליסט AI</h1>
-            <p className="text-slate-600 mb-6">ניתוח חכם של התיק והמסמכים — השתמש בעוזר הצף (למטה) לשאלות.</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">AI Analyst</h1>
+            <p className="text-slate-600 mb-6">Smart analysis of your portfolio & documents — use the floating assistant below for questions.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <Link
                 href="/portfolio-analysis"
                 className="bento-card p-6 block hover:border-teal-300 transition-colors group"
               >
-                <h3 className="font-semibold text-slate-900 group-hover:text-teal-700">ניתוח תיק השקעות</h3>
-                <p className="text-sm text-slate-600 mt-1">שווי כולל, NOI, תשואה על הון, ניקוד סיכון — תובנות ב־60 שניות</p>
+                <h3 className="font-semibold text-slate-900 group-hover:text-teal-700">Portfolio Analysis</h3>
+                <p className="text-sm text-slate-600 mt-1">Total value, NOI, return on equity, risk score — insights in 60 seconds</p>
               </Link>
               <div className="bento-card p-6 opacity-75">
-                <h3 className="font-semibold text-slate-900">עוזר AI למסמכים</h3>
-                <p className="text-sm text-slate-600 mt-1">באפשרות להפעיל באמצעות העוזר הצף</p>
+                <h3 className="font-semibold text-slate-900">AI Document Assistant</h3>
+                <p className="text-sm text-slate-600 mt-1">Available via the floating assistant</p>
               </div>
             </div>
           </div>
@@ -711,6 +800,9 @@ function AppContent() {
         <PropertyDocumentUploadZone
           propertyName={propertyForDocs.name}
           onClose={() => setPropertyForDocs(null)}
+          onFilesSelected={(category, files, displayName) =>
+            handleDocumentsUpload(propertyForDocs.id, category, files, displayName)
+          }
         />
       )}
 
@@ -738,7 +830,7 @@ function Page() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="ltr">
           <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }

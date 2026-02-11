@@ -29,10 +29,10 @@ const NAV_ITEMS: Array<{
   icon: typeof LayoutDashboard;
   description: string;
 }> = [
-  { id: "dashboard", label: "דאשבורד", icon: LayoutDashboard, description: "סקירה כללית" },
-  { id: "portfolio", label: "תיק הנכסים שלי", icon: Briefcase, description: "נכסים ותיק" },
-  { id: "market-analysis", label: "ניתוח שוק", icon: LineChart, description: "תובנות שוק" },
-  { id: "ai-analyst", label: "אנליסט AI", icon: Bot, description: "ניתוח חכם" },
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Overview" },
+  { id: "portfolio", label: "My Portfolio", icon: Briefcase, description: "Properties" },
+  { id: "market-analysis", label: "Market Insights", icon: LineChart, description: "Market data" },
+  { id: "ai-analyst", label: "AI Analyst", icon: Bot, description: "Smart analysis" },
 ];
 
 const SIDEBAR_WIDTH = 256;
@@ -54,9 +54,9 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
 
   return (
     <aside
-      className="fixed right-0 top-0 h-full bg-slate-900 border-l border-slate-800 z-40 flex flex-col transition-[width] duration-300 ease-in-out"
+      className="fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-[width] duration-300 ease-in-out"
       style={{ width }}
-      aria-label="ניווט ראשי"
+      aria-label="Main navigation"
     >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
@@ -67,7 +67,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             {!isCollapsed && (
               <div className="min-w-0">
                 <h1 className="font-bold text-white truncate">InvestIntel</h1>
-                <p className="text-xs text-slate-500">מודיעין נדל״ן</p>
+                <p className="text-xs text-slate-500">UK Real Estate Intelligence</p>
               </div>
             )}
           </div>
@@ -75,7 +75,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
             type="button"
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-1.5 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white shrink-0"
-            aria-label={isCollapsed ? "הרחב תפריט" : "כווץ תפריט"}
+            aria-label={isCollapsed ? "Expand menu" : "Collapse menu"}
           >
             {isCollapsed ? (
               <ChevronRight className="w-4 h-4" />
@@ -99,7 +99,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                   className={cn(
                     "w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
                     isActive
-                      ? "bg-teal-500/10 text-white border-r-2 border-teal-500"
+                      ? "bg-teal-500/10 text-white border-l-2 border-teal-500"
                       : "text-slate-400 hover:text-white hover:bg-slate-800/50"
                   )}
                   aria-current={isActive ? "page" : undefined}
@@ -109,7 +109,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                     aria-hidden
                   />
                   {!isCollapsed && (
-                    <div className="text-right min-w-0">
+                    <div className="text-left min-w-0">
                       <p className="font-medium truncate">{item.label}</p>
                       <p className="text-xs text-slate-500 truncate">{item.description}</p>
                     </div>
@@ -139,7 +139,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
                     type="button"
                     onClick={handleLogout}
                     className="p-2 hover:bg-red-500/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors"
-                    title="התנתק"
+                    title="Log out"
                   >
                     <LogOut className="w-4 h-4" />
                   </button>
@@ -159,8 +159,8 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
               </div>
               {!isCollapsed && (
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-teal-400">התחבר / הירשם</p>
-                  <p className="text-xs text-slate-500">לשמירת נתונים</p>
+                  <p className="font-medium text-sm text-teal-400">Sign in / Sign up</p>
+                  <p className="text-xs text-slate-500">To save your data</p>
                 </div>
               )}
             </a>

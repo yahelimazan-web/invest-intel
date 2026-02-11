@@ -7,13 +7,11 @@ import { cn } from "../lib/utils";
 import {
   fetchMarketAnalysis,
   generateActionableInsight,
-  type MarketTab,
   type PropertyAnalysis,
 } from "../lib/market-analysis-data";
 
-function formatCurrency(value: number, currency: "GBP" | "ILS"): string {
+function formatCurrency(value: number): string {
   const n = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  if (currency === "ILS") return `₪${n}`;
   return `£${n}`;
 }
 
@@ -37,17 +35,14 @@ interface InsightCardProps {
 }
 
 function InsightCard({ title, icon, children, variant = "default" }: InsightCardProps) {
+  const variantClasses = variant === "highlight"
+    ? "bg-slate-50 border-slate-200 border-l-4 border-l-teal-500"
+    : "bg-white border-slate-200 shadow-sm";
   return (
     <div
-      className={cn(
-        "rounded-xl border p-5 text-right",
-        variant === "highlight"
-          ? "bg-slate-50 border-slate-200 border-s-4 border-s-teal-500"
-          : "bg-white border-slate-200 shadow-sm"
-      )}
-      dir="rtl"
+      className={cn("rounded-xl border p-5 text-left", variantClasses)}
     >
-      <div className="flex items-center gap-2 mb-3 justify-end">
+      <div className="flex items-center gap-2 mb-3">
         <div className="w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center text-slate-100">
           {icon}
         </div>
@@ -59,7 +54,6 @@ function InsightCard({ title, icon, children, variant = "default" }: InsightCard
 }
 
 function MarketAnalysisContent() {
-  const [tab, setTab] = useState<MarketTab>("israel");
   const [properties, setProperties] = useState<PropertyAnalysis[]>([]);
   const [loading, setLoading] = useState(true);
   const [mounted, setMounted] = useState(false);
@@ -69,20 +63,17 @@ function MarketAnalysisContent() {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    fetchMarketAnalysis(tab).then((data) => {
+    fetchMarketAnalysis().then((data) => {
       if (!cancelled) {
         setProperties(data);
         setLoading(false);
       }
     });
     return () => { cancelled = true; };
-  }, [tab]);
-
-  const tabLabel = tab === "israel" ? "ישראל" : "אנגליה";
-  const currencySymbol = tab === "israel" ? "₪" : "£";
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-50" dir="rtl">
+    <div className="min-h-screen bg-slate-50" dir="ltr">
       {/* Header */}
       <header className="bg-slate-900 text-white px-6 py-4 border-b border-slate-800">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
@@ -91,33 +82,19 @@ function MarketAnalysisContent() {
             className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors text-sm"
           >
             <ArrowRight className="w-4 h-4" aria-hidden />
-            חזרה לאפליקציה
+            Back to app
           </Link>
-          <h1 className="text-lg font-semibold">ניתוח שוק אסטרטגי</h1>
+          <h1 className="text-lg font-semibold">Strategic Market Analysis</h1>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto px-6 py-8">
-        {/* Tab Navigation */}
-        <div className="flex gap-2 mb-8">
-          {(["israel", "england"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={cn(
-                "px-6 py-3 rounded-xl font-medium transition-all",
-                tab === t
-                  ? "bg-slate-900 text-white shadow-md"
-                  : "bg-white text-slate-600 hover:bg-slate-100 border border-slate-200"
-              )}
-            >
-              {t === "israel" ? "ישראל (₪)" : "אנגליה (£)"}
-            </button>
-          ))}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-1">United Kingdom — £ GBP</h2>
+          <p className="text-slate-600 text-sm">UK postcodes (e.g. L18, L15 Liverpool)</p>
         </div>
 
-        {loading ? (
+        {loading || !mounted ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
           </div>
@@ -127,7 +104,7 @@ function MarketAnalysisContent() {
               <div key={prop.id} className="space-y-6">
                 {/* Property Header + Health Score */}
                 <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="text-right">
+                  <div>
                     <h2 className="text-xl font-bold text-slate-900">{prop.title}</h2>
                     <p className="text-slate-600 text-sm mt-0.5">{prop.address} • {prop.zipCode}</p>
                   </div>
@@ -138,8 +115,8 @@ function MarketAnalysisContent() {
                     )}
                   >
                     <Zap className={cn("w-5 h-5", healthScoreColor(prop.healthScore))} aria-hidden />
-                    <div className="text-right">
-                      <span className="text-xs font-medium text-slate-600 block">ציון בריאות הנכס</span>
+                    <div>
+                      <span className="text-xs font-medium text-slate-600 block">Property Health Score</span>
                       <span className={cn("text-2xl font-bold", healthScoreColor(prop.healthScore))}>
                         {prop.healthScore}
                       </span>
@@ -151,25 +128,25 @@ function MarketAnalysisContent() {
                 {/* Insight Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <InsightCard
-                    title="פער שכירות"
+                    title="Rent Gap"
                     icon={<TrendingUp className="w-4 h-4" aria-hidden />}
                     variant={prop.rentGapPercent > 5 ? "highlight" : "default"}
                   >
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">השכירות שלך</span>
+                        <span className="text-slate-500">Your rent</span>
                         <span className="font-semibold text-slate-900">
-                          {formatCurrency(prop.currentRent, prop.currency)}
+                          {formatCurrency(prop.currentRent)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">ממוצע שוק (שכונה)</span>
+                        <span className="text-slate-500">Market avg (neighbourhood)</span>
                         <span className="font-semibold text-slate-900">
-                          {formatCurrency(prop.marketRent, prop.currency)}
+                          {formatCurrency(prop.marketRent)}
                         </span>
                       </div>
                       <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                        <span className="text-slate-500">פער</span>
+                        <span className="text-slate-500">Gap</span>
                         <span
                           className={cn(
                             "font-bold",
@@ -180,30 +157,30 @@ function MarketAnalysisContent() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
-                        תפוסה באזור: {prop.neighborhoodOccupancy}%
+                        Area occupancy: {prop.neighborhoodOccupancy}%
                       </p>
                     </div>
                   </InsightCard>
 
                   <InsightCard
-                    title="פער ערך"
+                    title="Value Gap"
                     icon={<Home className="w-4 h-4" aria-hidden />}
                   >
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">שווי משוער</span>
+                        <span className="text-slate-500">Estimated value</span>
                         <span className="font-semibold text-slate-900">
-                          {formatCurrency(prop.estimatedValue, prop.currency)}
+                          {formatCurrency(prop.estimatedValue)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">ממוצע מכירות (מיקוד)</span>
+                        <span className="text-slate-500">Avg sold in area</span>
                         <span className="font-semibold text-slate-900">
-                          {formatCurrency(prop.avgSoldInArea, prop.currency)}
+                          {formatCurrency(prop.avgSoldInArea)}
                         </span>
                       </div>
                       <div className="pt-2 border-t border-slate-100 flex justify-between items-center">
-                        <span className="text-slate-500">פער</span>
+                        <span className="text-slate-500">Gap</span>
                         <span
                           className={cn(
                             "font-bold",
@@ -214,53 +191,51 @@ function MarketAnalysisContent() {
                         </span>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
-                        {prop.recentSalesCount} מכירות אחרונות באזור
+                        {prop.recentSalesCount} recent sales in area
                       </p>
                     </div>
                   </InsightCard>
 
                   <InsightCard
-                    title="יעילות ניהולית"
+                    title="Operational Efficiency"
                     icon={<BarChart3 className="w-4 h-4" aria-hidden />}
                   >
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-slate-500">ימי ריק (שלך)</span>
-                        <span className="font-semibold text-slate-900">{prop.voidDaysOnMarket} ימים</span>
+                        <span className="text-slate-500">Void days (yours)</span>
+                        <span className="font-semibold text-slate-900">{prop.voidDaysOnMarket} days</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-500">ממוצע אזורי</span>
-                        <span className="font-semibold text-slate-900">{prop.benchmarkVoidDays} ימים</span>
+                        <span className="text-slate-500">Area average</span>
+                        <span className="font-semibold text-slate-900">{prop.benchmarkVoidDays} days</span>
                       </div>
                       <div className="pt-2 border-t border-slate-100 flex justify-between">
-                        <span className="text-slate-500">דמי ניהול</span>
+                        <span className="text-slate-500">Management fee</span>
                         <span className="font-semibold text-slate-900">{prop.managementFeePercent}%</span>
                       </div>
                       <p className="text-xs text-slate-500 mt-1">
-                        ממוצע שוק: {prop.benchmarkFeePercent}%
+                        Market average: {prop.benchmarkFeePercent}%
                       </p>
                     </div>
                   </InsightCard>
                 </div>
 
-                {/* Actionable Insights Panel — rendered after mount to avoid hydration mismatch */}
-                {mounted && (
-                  <div className="bg-slate-900 rounded-xl p-6 text-white text-right" dir="rtl">
-                    <div className="flex items-center gap-2 mb-3 justify-end">
-                      <Lightbulb className="w-5 h-5 text-teal-400" aria-hidden />
-                      <h3 className="font-semibold">תובנות מעשיות</h3>
-                    </div>
-                    <p className="text-slate-200 leading-relaxed">
-                      {generateActionableInsight(prop)}
-                    </p>
+                {/* Actionable Insights Panel — shown only when mounted (hydration-safe) */}
+                <div className="bg-slate-900 rounded-xl p-6 text-white">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Lightbulb className="w-5 h-5 text-teal-400" aria-hidden />
+                    <h3 className="font-semibold">Actionable Insights</h3>
                   </div>
-                )}
+                  <p className="text-slate-200 leading-relaxed">
+                    {generateActionableInsight(prop)}
+                  </p>
+                </div>
               </div>
             ))}
 
             {properties.length === 0 && (
               <div className="bg-white rounded-xl border border-slate-200 p-12 text-center text-slate-500">
-                אין נכסים בתיק עבור {tabLabel}
+                No properties for UK market
               </div>
             )}
           </div>
@@ -275,7 +250,7 @@ export default function MarketAnalysisPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="ltr">
           <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
         </div>
       }

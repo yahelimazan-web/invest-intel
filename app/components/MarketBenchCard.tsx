@@ -5,11 +5,9 @@ import { TrendingUp } from "lucide-react";
 import { cn } from "../lib/utils";
 import type { BenchmarkResult } from "../lib/market-benchmark";
 
-function formatCurrency(value: number, currency: "GBP" | "ILS" | "EUR"): string {
+function formatCurrency(value: number): string {
   const n = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  if (currency === "ILS") return `₪${n}`;
-  if (currency === "GBP") return `£${n}`;
-  return `€${n}`;
+  return `£${n}`;
 }
 
 interface MarketBenchCardProps {
@@ -18,17 +16,16 @@ interface MarketBenchCardProps {
 }
 
 export default function MarketBenchCard({ title, benchmark }: MarketBenchCardProps) {
-  const { yourRent, marketRent, gapPercent, isOpportunity, aiAdvice, currency } = benchmark;
+  const { yourRent, marketRent, gapPercent, isOpportunity, aiAdvice } = benchmark;
   const gapPct = Math.round(gapPercent * 100);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
   return (
     <div
-      className="bento-card p-5 border border-slate-200 rounded-xl shadow-sm bg-white text-right"
-      dir="rtl"
+      className="bento-card p-5 border border-slate-200 rounded-xl shadow-sm bg-white text-left"
       role="article"
-      aria-label={`שוואת שוק: ${title}`}
+      aria-label={`Market comparison: ${title}`}
     >
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-semibold text-slate-900">{title}</h3>
@@ -41,31 +38,31 @@ export default function MarketBenchCard({ title, benchmark }: MarketBenchCardPro
           {isOpportunity ? (
             <>
               <TrendingUp className="w-3.5 h-3.5" aria-hidden />
-              הזדמנות
+              Opportunity
             </>
           ) : (
-            "מאוזן"
+            "In line"
           )}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-4 text-sm mb-4">
         <div>
-          <span className="text-slate-500 font-medium">השכירות שלך</span>
+          <span className="text-slate-500 font-medium">Your rent</span>
           <div className="financial-value mt-0.5 text-slate-900">
-            {formatCurrency(yourRent, currency)}
+            {formatCurrency(yourRent)}
           </div>
         </div>
         <div>
-          <span className="text-slate-500 font-medium">ממוצע שוק</span>
+          <span className="text-slate-500 font-medium">Market avg</span>
           <div className="financial-value mt-0.5 text-slate-900">
-            {formatCurrency(marketRent, currency)}
+            {formatCurrency(marketRent)}
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-3 justify-end">
-        <span className="text-slate-500 text-sm">פער תשואה:</span>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-slate-500 text-sm">Yield gap:</span>
         <span
           className={cn(
             "font-semibold text-sm",
