@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useRef, useEffect, Suspense } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Wallet, Percent, Banknote, Gauge, ChevronDown, Calendar, FolderOpen, ArrowRight, Pencil } from "lucide-react";
 import {
   AreaChart,
@@ -15,6 +17,12 @@ import Sidebar, { type PageId, SIDEBAR_WIDTH } from "./components/Sidebar";
 import PropertyDocumentUploadZone from "./components/PropertyDocumentUploadZone";
 import PropertyEditModal, { type PortfolioProperty } from "./components/PropertyEditModal";
 import FloatingAIAssistant from "./components/FloatingAIAssistant";
+import MarketBenchCard from "./components/MarketBenchCard";
+import {
+  mapPropertyToArea,
+  runBenchmark,
+  type BenchmarkResult,
+} from "./lib/market-benchmark";
 
 // Sample portfolio properties (Property A Israel, Property B UK)
 const INITIAL_PORTFOLIO: PortfolioProperty[] = [
@@ -46,10 +54,12 @@ const INITIAL_PORTFOLIO: PortfolioProperty[] = [
   },
 ];
 
+// Deterministic formatting (no locale) to avoid hydration mismatch between server and client
 function formatPropertyCurrency(value: number, currency: "ILS" | "GBP" | "EUR"): string {
-  if (currency === "ILS") return `₪${value.toLocaleString("he-IL")}`;
-  if (currency === "GBP") return `£${value.toLocaleString()}`;
-  return `€${value.toLocaleString()}`;
+  const n = Math.round(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  if (currency === "ILS") return `₪${n}`;
+  if (currency === "GBP") return `£${n}`;
+  return `€${n}`;
 }
 
 function formatPropertyDate(iso: string): string {
@@ -75,20 +85,20 @@ const KPI = {
 
 type ChartMetric = "portfolio-value" | "cashflow" | "yield";
 
-// Placeholder 12-month data (same month labels for all)
+// Placeholder 12-month data — deterministic (no Math.random) to avoid hydration mismatch
 const MONTHS = ["ינו", "פבר", "מרץ", "אפר", "מאי", "יונ", "יול", "אוג", "ספט", "אוק", "נוב", "דצמ"];
 
 const CHART_DATA_PORTFOLIO = MONTHS.map((month, i) => ({
   month,
-  value: 1_000_000 + 40_000 * i + Math.round(Math.random() * 20_000),
+  value: 1_000_000 + 40_000 * i + (i * 1234) % 20_000,
 }));
 const CHART_DATA_CASHFLOW = MONTHS.map((_, i) => ({
   month: MONTHS[i],
-  value: 3_500 + 200 * i + Math.round(Math.random() * 500),
+  value: 3_500 + 200 * i + (i * 317) % 500,
 }));
 const CHART_DATA_YIELD = MONTHS.map((_, i) => ({
   month: MONTHS[i],
-  value: 4.2 + i * 0.08 + Math.random() * 0.2,
+  value: 4.2 + i * 0.08 + (i % 10) * 0.02,
 }));
 
 function healthScoreColor(score: number) {
@@ -115,13 +125,23 @@ function formatDateForInput(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default function App() {
+function AppContent() {
+  const searchParams = useSearchParams();
   const [currentPage, setCurrentPage] = useState<PageId>("dashboard");
   const [chartMetric, setChartMetric] = useState<ChartMetric>("portfolio-value");
   const [chartRange, setChartRange] = useState<ChartRange>("1Y");
-  const [customStart, setCustomStart] = useState(formatDateForInput(new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)));
-  const [customEnd, setCustomEnd] = useState(formatDateForInput(new Date()));
+  // Date range: stable initial values to avoid hydration mismatch; set real dates in useEffect
+  const [customStart, setCustomStart] = useState("2024-01-01");
+  const [customEnd, setCustomEnd] = useState("2024-12-31");
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+
+  useEffect(() => {
+    const end = new Date();
+    const start = new Date(end);
+    start.setFullYear(start.getFullYear() - 1);
+    setCustomStart(formatDateForInput(start));
+    setCustomEnd(formatDateForInput(end));
+  }, []);
   const datePickerRef = useRef<HTMLDivElement>(null);
   const datePickerTriggerRef = useRef<HTMLButtonElement>(null);
   const handlePageChange = useCallback((page: PageId) => setCurrentPage(page), []);
@@ -131,6 +151,38 @@ export default function App() {
   const [propertyForDocs, setPropertyForDocs] = useState<{ id: string; name: string } | null>(null);
   const [viewPropertyId, setViewPropertyId] = useState<string | null>(null);
   const [editingProperty, setEditingProperty] = useState<PortfolioProperty | null>(null);
+
+  // Market Analysis: benchmark results (Comparison Engine)
+  const [benchmarkResults, setBenchmarkResults] = useState<Record<string, BenchmarkResult>>({});
+  const [benchmarkReady, setBenchmarkReady] = useState(false);
+
+  // Open portfolio view when visiting /?view=portfolio (e.g. redirect from /portfolio)
+  useEffect(() => {
+    const view = searchParams.get("view");
+    if (view === "portfolio") setCurrentPage("portfolio");
+    if (view === "market-analysis") setCurrentPage("market-analysis");
+  }, [searchParams]);
+
+  // Run market benchmarks for properties with mapped areas
+  useEffect(() => {
+    setBenchmarkReady(false);
+    let cancelled = false;
+    const run = async () => {
+      const results: Record<string, BenchmarkResult> = {};
+      for (const prop of portfolioProperties) {
+        const areaKey = mapPropertyToArea(prop.id, prop.country, prop.address, prop.title);
+        if (!areaKey) continue;
+        const b = await runBenchmark(areaKey, prop.monthlyRent, prop.purchasePriceCurrency);
+        if (!cancelled) results[prop.id] = b;
+      }
+      if (!cancelled) {
+        setBenchmarkResults(results);
+        setBenchmarkReady(true);
+      }
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [portfolioProperties]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -469,23 +521,23 @@ export default function App() {
                       <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <span className="text-slate-500">תזרים חודשי</span>
-                          <p className="font-medium text-slate-900">
+                          <div className="font-medium text-slate-900">
                             {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}
-                          </p>
+                          </div>
                         </div>
                         <div>
                           <span className="text-slate-500">תשואה שנתית</span>
-                          <p className="font-medium text-slate-900">{prop.annualYieldPercent}%</p>
+                          <div className="font-medium text-slate-900">{prop.annualYieldPercent}%</div>
                         </div>
                         <div>
                           <span className="text-slate-500">מחיר קנייה</span>
-                          <p className="font-medium text-slate-900">
+                          <div className="font-medium text-slate-900">
                             {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}
-                          </p>
+                          </div>
                         </div>
                         <div>
                           <span className="text-slate-500">תאריך קנייה</span>
-                          <p className="font-medium text-slate-900">{formatPropertyDate(prop.purchaseDate)}</p>
+                          <div className="font-medium text-slate-900">{formatPropertyDate(prop.purchaseDate)}</div>
                         </div>
                       </div>
                       <span
@@ -510,10 +562,11 @@ export default function App() {
                       key={prop.id}
                       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative"
                     >
-                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1">
+                      {/* Top-right: Documents (folder) + Edit (pencil) - always visible on card */}
+                      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                         <button
                           type="button"
-                          className="p-2 rounded-lg bg-white/90 shadow-sm text-slate-500 hover:text-teal-600 hover:bg-white transition-colors"
+                          className="p-2 rounded-lg bg-slate-900/85 text-white shadow-md hover:bg-slate-800 transition-colors border border-white/10"
                           onClick={(e) => {
                             e.stopPropagation();
                             setPropertyForDocs({ id: prop.id, name: prop.title });
@@ -524,7 +577,7 @@ export default function App() {
                         </button>
                         <button
                           type="button"
-                          className="p-2 rounded-lg bg-white/90 shadow-sm text-slate-500 hover:text-teal-600 hover:bg-white transition-colors"
+                          className="p-2 rounded-lg bg-slate-900/85 text-white shadow-md hover:bg-slate-800 transition-colors border border-white/10"
                           onClick={(e) => {
                             e.stopPropagation();
                             setEditingProperty(prop);
@@ -599,6 +652,59 @@ export default function App() {
             )}
           </div>
         )}
+
+        {currentPage === "market-analysis" && (
+          <div className="p-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-slate-900 mb-2">ניתוח שוק</h1>
+                <p className="text-slate-600">השוואת השכירות שלך לממוצע שוק — זיהוי הזדמנויות</p>
+              </div>
+              <Link
+                href="/market-analysis"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors"
+              >
+                ניתוח שוק אסטרטגי — ישראל / אנגליה
+              </Link>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {portfolioProperties
+                .filter((p) => benchmarkResults[p.id])
+                .map((prop) => (
+                  <MarketBenchCard
+                    key={prop.id}
+                    title={prop.title}
+                    benchmark={benchmarkResults[prop.id]}
+                  />
+                ))}
+            </div>
+            {benchmarkReady && Object.keys(benchmarkResults).length === 0 && (
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center text-slate-500">
+                אין נכסים מתוחזרים לאזורים נתמכים (L18 Liverpool, מרכז תל אביב)
+              </div>
+            )}
+          </div>
+        )}
+
+        {currentPage === "ai-analyst" && (
+          <div className="p-8">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">אנליסט AI</h1>
+            <p className="text-slate-600 mb-6">ניתוח חכם של התיק והמסמכים — השתמש בעוזר הצף (למטה) לשאלות.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <Link
+                href="/portfolio-analysis"
+                className="bento-card p-6 block hover:border-teal-300 transition-colors group"
+              >
+                <h3 className="font-semibold text-slate-900 group-hover:text-teal-700">ניתוח תיק השקעות</h3>
+                <p className="text-sm text-slate-600 mt-1">שווי כולל, NOI, תשואה על הון, ניקוד סיכון — תובנות ב־60 שניות</p>
+              </Link>
+              <div className="bento-card p-6 opacity-75">
+                <h3 className="font-semibold text-slate-900">עוזר AI למסמכים</h3>
+                <p className="text-sm text-slate-600 mt-1">באפשרות להפעיל באמצעות העוזר הצף</p>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
 
       {propertyForDocs && (
@@ -626,3 +732,20 @@ export default function App() {
     </div>
   );
 }
+
+/** Root page: must be default export and return a single React element (Suspense wraps useSearchParams). */
+function Page() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center" dir="rtl">
+          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <AppContent />
+    </Suspense>
+  );
+}
+
+export default Page;

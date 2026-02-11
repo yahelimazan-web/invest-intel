@@ -24,10 +24,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="he" dir="rtl" className={inter.variable}>
+    <html lang="he" dir="rtl" className={inter.variable} suppressHydrationWarning>
       <body
         className={`${inter.variable} ${rubik.variable} font-sans antialiased min-h-screen text-slate-900`}
         style={{ fontFamily: "var(--font-inter), Inter, var(--font-rubik), system-ui, sans-serif" }}
+        suppressHydrationWarning
       >
         <Providers>{children}</Providers>
       </body>
