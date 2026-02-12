@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 /**
  * My Portfolio — redirects to main app with portfolio view.
- * The full implementation (property cards, document upload, FAB) lives in app/page.tsx when currentPage === "portfolio".
+ * The full implementation (property cards with integrated document upload) lives in app/page.tsx when currentPage === "portfolio".
  */
 export default function PortfolioRoutePage() {
   const router = useRouter();

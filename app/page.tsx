@@ -3,7 +3,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Wallet, Percent, Banknote, Gauge, ChevronDown, Calendar, FolderOpen, ArrowRight, Pencil, Upload } from "lucide-react";
+import { Wallet, Percent, Banknote, Gauge, ChevronDown, Calendar, ArrowRight, Pencil, Upload, Save, X } from "lucide-react";
 import {
   AreaChart,
   Area,
@@ -14,7 +14,7 @@ import {
 } from "recharts";
 import { cn } from "./lib/utils";
 import Sidebar, { type PageId, SIDEBAR_WIDTH } from "./components/Sidebar";
-import PropertyDocumentUploadZone from "./components/PropertyDocumentUploadZone";
+import PropertyFileManager from "./components/PropertyFileManager";
 import PropertyEditModal, { type PortfolioProperty, type PropertyEnrichment } from "./components/PropertyEditModal";
 import PropertyCardImage from "./components/PropertyCardImage";
 import FloatingAIAssistant from "./components/FloatingAIAssistant";
@@ -26,6 +26,7 @@ import {
 } from "./lib/market-benchmark";
 import { fetchEnrichmentForPortfolio } from "./lib/property-enrichment";
 import { useAuth } from "./lib/auth";
+import { computeGrossYield, computeNetYield } from "./lib/property-yield";
 
 // Sample portfolio properties (UK only)
 const INITIAL_PORTFOLIO: PortfolioProperty[] = [
@@ -150,11 +151,51 @@ function AppContent() {
   const [viewPropertyId, setViewPropertyId] = useState<string | null>(null);
   const [editingProperty, setEditingProperty] = useState<PortfolioProperty | null>(null);
   const [propertyEnrichment, setPropertyEnrichment] = useState<Record<string, PropertyEnrichment>>({});
+  const [propertyImages, setPropertyImages] = useState<Record<string, string[]>>({});
+  // Inline edit mode per card
+  const [editingCardId, setEditingCardId] = useState<string | null>(null);
+  const [editingDraft, setEditingDraft] = useState<{
+    purchasePrice: number;
+    monthlyRent: number;
+    image?: string | null;
+  } | null>(null);
+  const [isSavingCard, setIsSavingCard] = useState(false);
+
+  const handleSaveCard = useCallback(async () => {
+    if (!editingCardId || !editingDraft) return;
+    setIsSavingCard(true);
+    try {
+      const res = await fetch(`/api/properties/${editingCardId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingDraft),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Save failed");
+      const grossYield = computeGrossYield(editingDraft.monthlyRent, editingDraft.purchasePrice);
+      const updates = { ...editingDraft, annualYieldPercent: grossYield };
+      setPortfolioProperties((prev) =>
+        prev.map((p) =>
+          p.id === editingCardId ? { ...p, ...updates } : p
+        )
+      );
+      setEditingCardId(null);
+      setEditingDraft(null);
+    } catch (err) {
+      console.error("[Portfolio] Save failed:", err);
+    } finally {
+      setIsSavingCard(false);
+    }
+  }, [editingCardId, editingDraft]);
+
+  const handleCancelCard = useCallback(() => {
+    setEditingCardId(null);
+    setEditingDraft(null);
+  }, []);
 
   // Market Analysis: benchmark results (Comparison Engine)
   const [benchmarkResults, setBenchmarkResults] = useState<Record<string, BenchmarkResult>>({});
   const [benchmarkReady, setBenchmarkReady] = useState(false);
-  const [uploadStatus, setUploadStatus] = useState<{ [key: string]: "idle" | "uploading" | "success" | "error" }>({});
   const { user } = useAuth();
 
   // Open portfolio view when visiting /?view=portfolio (e.g. redirect from /portfolio)
@@ -173,6 +214,26 @@ function AppContent() {
     });
     return () => { cancelled = true; };
   }, [currentPage, portfolioProperties]);
+
+  // Fetch property document images (Zoopla-style gallery) when viewing portfolio
+  useEffect(() => {
+    if (currentPage !== "portfolio" || portfolioProperties.length === 0) return;
+    const userId = user?.id ?? "anon";
+    let cancelled = false;
+    const run = async () => {
+      const next: Record<string, string[]> = {};
+      for (const p of portfolioProperties) {
+        try {
+          const res = await fetch(`/api/properties/${p.id}/images?userId=${encodeURIComponent(userId)}`);
+          const data = await res.json().catch(() => ({}));
+          if (!cancelled && Array.isArray(data.imageUrls)) next[p.id] = data.imageUrls;
+        } catch (_) {}
+      }
+      if (!cancelled) setPropertyImages((prev) => ({ ...prev, ...next }));
+    };
+    run();
+    return () => { cancelled = true; };
+  }, [currentPage, portfolioProperties, user?.id, propertyForDocs]);
 
   // Run market benchmarks for properties with mapped areas
   useEffect(() => {
@@ -228,39 +289,8 @@ function AppContent() {
     return (v: number) => `£${(v / 1000).toFixed(0)}k`;
   }, [chartMetric]);
 
-  const handleDocumentsUpload = useCallback(
-    async (propertyId: string, category: string, files: File[], displayName?: string) => {
-      const userId = user?.id ?? "anon";
-      setUploadStatus((s) => ({ ...s, [propertyId]: "uploading" }));
-      try {
-        const folderId = category;
-        const tags = displayName ? [displayName] : [];
-        for (const file of files) {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("propertyId", propertyId);
-          formData.append("folderId", folderId);
-          formData.append("userId", userId);
-          formData.append("tags", JSON.stringify(tags));
-          const res = await fetch("/api/documents/upload", { method: "POST", body: formData });
-          if (!res.ok) {
-            const data = await res.json().catch(() => ({}));
-            throw new Error(data.error || "Upload failed");
-          }
-        }
-        setUploadStatus((s) => ({ ...s, [propertyId]: "success" }));
-        setTimeout(() => setUploadStatus((s) => ({ ...s, [propertyId]: "idle" })), 2000);
-      } catch (err) {
-        console.error("[Documents] Upload error:", err);
-        setUploadStatus((s) => ({ ...s, [propertyId]: "error" }));
-        setTimeout(() => setUploadStatus((s) => ({ ...s, [propertyId]: "idle" })), 3000);
-      }
-    },
-    [user?.id]
-  );
-
   return (
-    <div className="min-h-screen bg-slate-50" dir="ltr">
+    <div className="min-h-screen bg-slate-50" dir="ltr" suppressHydrationWarning>
       <Sidebar currentPage={currentPage} onPageChange={handlePageChange} />
 
       <main
@@ -462,7 +492,7 @@ function AppContent() {
                         borderRadius: "12px",
                         boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.07)",
                       }}
-                      formatter={(value: number) => [formatY(value), ""]}
+                      formatter={(value: number | undefined) => [formatY(value ?? 0), ""]}
                       labelFormatter={(label) => label}
                     />
                     <Area
@@ -562,20 +592,34 @@ function AppContent() {
                         return (
                           <>
                             <div className="mb-6 rounded-xl overflow-hidden border border-slate-200 aspect-[4/3]">
-                              <PropertyCardImage prop={prop} enrichment={enrich} alt={`${prop.title} — street view or map`} className="w-full h-full object-cover" />
+                              <PropertyCardImage
+                                prop={prop}
+                                enrichment={enrich}
+                                propertyImageUrls={propertyImages[prop.id]}
+                                alt={`${prop.title} — property photo`}
+                                className="w-full h-full object-cover"
+                              />
                             </div>
                             <h1 className="text-xl font-semibold text-slate-900">{prop.title}</h1>
                             <p className="text-slate-500 mt-1">{prop.address}</p>
                             <div className="mt-6 grid grid-cols-2 gap-4 text-sm">
                               <div>
-                                <span className="text-slate-500">Monthly cashflow</span>
+                                <span className="text-slate-500">Monthly rent</span>
                                 <div className="font-medium text-slate-900">
                                   {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}
                                 </div>
                               </div>
                               <div>
-                                <span className="text-slate-500">Annual yield</span>
-                                <div className="font-medium text-slate-900">{prop.annualYieldPercent}%</div>
+                                <span className="text-slate-500">Gross yield</span>
+                                <div className="font-medium text-slate-900">
+                                  {prop.purchasePrice > 0 ? computeGrossYield(prop.monthlyRent, prop.purchasePrice).toFixed(1) : prop.annualYieldPercent}%
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-slate-500">Net yield (incl. 10% mgmt)</span>
+                                <div className="font-medium text-slate-900">
+                                  {prop.purchasePrice > 0 ? computeNetYield(prop.monthlyRent, prop.purchasePrice).toFixed(1) : "—"}%
+                                </div>
                               </div>
                               <div>
                                 <span className="text-slate-500">Purchase price</span>
@@ -624,6 +668,24 @@ function AppContent() {
                       >
                         {prop.status === "rented" ? "Rented" : "Needs attention"}
                       </span>
+                      <div className="mt-4 pt-4 border-t border-slate-200 flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setEditingProperty(prop)}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors border border-slate-200"
+                        >
+                          <Pencil className="w-4 h-4" aria-hidden />
+                          Full Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setPropertyForDocs({ id: prop.id, name: prop.title })}
+                          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200"
+                        >
+                          <Upload className="w-4 h-4" aria-hidden />
+                          Upload Documents
+                        </button>
+                      </div>
                     </div>
                   );
                 })()}
@@ -638,38 +700,28 @@ function AppContent() {
                       key={prop.id}
                       className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative"
                     >
-                      {/* Top-right: Documents (folder) + Upload Documents + Edit (pencil) — card-level only */}
+                      {/* Top-right: Edit (pencil) — toggles inline edit mode */}
                       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
                         <button
                           type="button"
-                          className="p-2 rounded-lg bg-slate-900/85 text-white shadow-md hover:bg-slate-800 transition-colors border border-white/10"
+                          className={cn(
+                            "p-2 rounded-lg shadow-md transition-colors border",
+                            editingCardId === prop.id
+                              ? "bg-teal-600 text-white border-teal-500/50"
+                              : "bg-slate-900/85 text-white border-white/10 hover:bg-slate-800"
+                          )}
                           onClick={(e) => {
                             e.stopPropagation();
-                            setPropertyForDocs({ id: prop.id, name: prop.title });
-                          }}
-                          aria-label="Documents"
-                        >
-                          <FolderOpen className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-teal-600 text-white shadow-md hover:bg-teal-500 transition-colors border border-teal-500/50 text-xs font-medium"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPropertyForDocs({ id: prop.id, name: prop.title });
-                          }}
-                          aria-label="Upload documents"
-                          disabled={uploadStatus[prop.id] === "uploading"}
-                        >
-                          <Upload className="w-4 h-4 shrink-0" aria-hidden />
-                          <span className="hidden sm:inline">Upload Documents</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="p-2 rounded-lg bg-slate-900/85 text-white shadow-md hover:bg-slate-800 transition-colors border border-white/10"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingProperty(prop);
+                            if (editingCardId === prop.id) {
+                              handleCancelCard();
+                            } else {
+                              setEditingCardId(prop.id);
+                              setEditingDraft({
+                                purchasePrice: prop.purchasePrice,
+                                monthlyRent: prop.monthlyRent,
+                                image: prop.image ?? undefined,
+                              });
+                            }
                           }}
                           aria-label="Edit property"
                         >
@@ -679,14 +731,18 @@ function AppContent() {
                       <button
                         type="button"
                         className="block w-full text-left focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-inset rounded-t-xl"
-                        onClick={() => setViewPropertyId(prop.id)}
+                        onClick={() => {
+                          if (editingCardId === prop.id) return;
+                          setViewPropertyId(prop.id);
+                        }}
                         aria-label={`View property ${prop.title}`}
                       >
                         <div className="aspect-[4/3] bg-slate-100 flex items-center justify-center overflow-hidden relative">
                           <PropertyCardImage
                             prop={prop}
                             enrichment={propertyEnrichment[prop.id]}
-                            alt={`${prop.title} — street view or map`}
+                            propertyImageUrls={propertyImages[prop.id]}
+                            alt={`${prop.title} — property photo`}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -702,10 +758,25 @@ function AppContent() {
                           <h2 className="font-semibold text-slate-900">{prop.title}</h2>
                           <p className="text-sm text-slate-500 mt-0.5">{prop.address}</p>
                           <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-600">
-                            <span>Cashflow: {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}</span>
-                            <span>Yield: {prop.annualYieldPercent}%</span>
-                            <span className="col-span-2">Purchase: {formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}</span>
-                            <span className="col-span-2">Purchased: {formatPropertyDate(prop.purchaseDate)}</span>
+                            {editingCardId === prop.id && editingDraft ? (
+                              <span className="col-span-2">
+                                <label className="block text-slate-500 mb-0.5">Cashflow (£)</label>
+                                <input
+                                  type="number"
+                                  value={editingDraft.monthlyRent}
+                                  onChange={(e) =>
+                                    setEditingDraft((d) =>
+                                      d ? { ...d, monthlyRent: Math.max(0, Number(e.target.value) || 0) } : d
+                                    )
+                                  }
+                                  className="w-full rounded border border-slate-300 px-2 py-1 text-slate-900 text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </span>
+                            ) : (
+                              <span>Cashflow: {formatPropertyCurrency(prop.monthlyRent, prop.purchasePriceCurrency)}</span>
+                            )}
+                            <span>Purchased: {formatPropertyDate(prop.purchaseDate)}</span>
                             {(() => {
                               const e = propertyEnrichment[prop.id];
                               if (!e) return null;
@@ -720,19 +791,137 @@ function AppContent() {
                           </div>
                         </div>
                       </button>
-                      <div className="p-4 pt-0 flex justify-start">
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPropertyForDocs({ id: prop.id, name: prop.title });
-                          }}
-                          className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:text-teal-600 hover:bg-slate-50 rounded-lg transition-colors"
-                          aria-label="Upload documents"
-                        >
-                          <Upload className="w-4 h-4 text-slate-400" aria-hidden />
-                          Upload Documents
-                        </button>
+                      {/* Card footer: Price, Yield, Upload — or inline edit inputs + Save/Cancel */}
+                      <div className="p-4 pt-0 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 mt-2">
+                        {editingCardId === prop.id && editingDraft ? (
+                          <>
+                            <div className="flex flex-wrap items-center gap-3 text-sm w-full">
+                              <span className="w-full">
+                                <label className="block text-xs text-slate-500 mb-0.5">Featured Image URL</label>
+                                <input
+                                  type="url"
+                                  value={editingDraft.image ?? ""}
+                                  onChange={(e) =>
+                                    setEditingDraft((d) =>
+                                      d ? { ...d, image: e.target.value.trim() || null } : d
+                                    )
+                                  }
+                                  placeholder="Paste Zoopla/Rightmove photo URL"
+                                  className="w-full rounded border border-slate-300 px-2 py-1 text-slate-900 text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </span>
+                              <span>
+                                <label className="block text-xs text-slate-500 mb-0.5">Price (£)</label>
+                                <input
+                                  type="number"
+                                  value={editingDraft.purchasePrice}
+                                  onChange={(e) =>
+                                    setEditingDraft((d) =>
+                                      d ? { ...d, purchasePrice: Math.max(0, Number(e.target.value) || 0) } : d
+                                    )
+                                  }
+                                  className="w-24 rounded border border-slate-300 px-2 py-1 text-slate-900 text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </span>
+                              <span>
+                                <label className="block text-xs text-slate-500 mb-0.5">Rent (£/mo)</label>
+                                <input
+                                  type="number"
+                                  value={editingDraft.monthlyRent}
+                                  onChange={(e) =>
+                                    setEditingDraft((d) =>
+                                      d ? { ...d, monthlyRent: Math.max(0, Number(e.target.value) || 0) } : d
+                                    )
+                                  }
+                                  className="w-20 rounded border border-slate-300 px-2 py-1 text-slate-900 text-sm"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              </span>
+                              <span className="self-end pb-1">
+                                <span className="text-xs text-slate-500">Gross </span>
+                                <span className="font-medium text-teal-600">
+                                  {editingDraft.purchasePrice > 0
+                                    ? computeGrossYield(editingDraft.monthlyRent, editingDraft.purchasePrice).toFixed(1)
+                                    : "—"}
+                                  %
+                                </span>
+                                <span className="text-xs text-slate-500 ml-1">Net </span>
+                                <span className="font-medium text-slate-600">
+                                  {editingDraft.purchasePrice > 0
+                                    ? computeNetYield(editingDraft.monthlyRent, editingDraft.purchasePrice).toFixed(1)
+                                    : "—"}
+                                  %
+                                </span>
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCancelCard();
+                                }}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                              >
+                                <X className="w-4 h-4" />
+                                Cancel
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSaveCard();
+                                }}
+                                disabled={isSavingCard}
+                                className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                {isSavingCard ? (
+                                  <span className="animate-pulse">Saving...</span>
+                                ) : (
+                                  <>
+                                    <Save className="w-4 h-4" />
+                                    Save
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center gap-4 text-sm">
+                              <span className="text-slate-600">
+                                <span className="font-medium text-slate-900">{formatPropertyCurrency(prop.purchasePrice, prop.purchasePriceCurrency)}</span>
+                                <span className="text-slate-500 ml-1">Price</span>
+                              </span>
+                              <span className="text-slate-600">
+                                <span className="font-medium text-teal-600">
+                                  {prop.purchasePrice > 0 ? computeGrossYield(prop.monthlyRent, prop.purchasePrice).toFixed(1) : prop.annualYieldPercent}%
+                                </span>
+                                <span className="text-slate-500 ml-1">Gross</span>
+                              </span>
+                              <span className="text-slate-600">
+                                <span className="font-medium text-slate-600">
+                                  {prop.purchasePrice > 0 ? computeNetYield(prop.monthlyRent, prop.purchasePrice).toFixed(1) : "—"}%
+                                </span>
+                                <span className="text-slate-500 ml-1">Net</span>
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPropertyForDocs({ id: prop.id, name: prop.title });
+                              }}
+                              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-teal-600 hover:text-teal-700 hover:bg-teal-50 rounded-lg transition-colors border border-teal-200"
+                              aria-label="Upload documents"
+                            >
+                              <Upload className="w-4 h-4 shrink-0" aria-hidden />
+                              Upload Documents
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -749,12 +938,20 @@ function AppContent() {
                 <h1 className="text-2xl font-bold text-slate-900 mb-2">Market Insights</h1>
                 <p className="text-slate-600">Compare your rent to market average — identify opportunities</p>
               </div>
-              <Link
-                href="/market-analysis"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors"
-              >
-                Strategic Market Analysis — UK Postcodes
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/market-analysis"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  Strategic Market Analysis — UK Postcodes
+                </Link>
+                <Link
+                  href="/market-radar"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  Market Radar — Early Signals
+                </Link>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {portfolioProperties
@@ -797,12 +994,25 @@ function AppContent() {
       </main>
 
       {propertyForDocs && (
-        <PropertyDocumentUploadZone
+        <PropertyFileManager
+          propertyId={propertyForDocs.id}
           propertyName={propertyForDocs.name}
           onClose={() => setPropertyForDocs(null)}
-          onFilesSelected={(category, files, displayName) =>
-            handleDocumentsUpload(propertyForDocs.id, category, files, displayName)
-          }
+          onExtractedData={(data) => {
+            if (!data.monthlyRent && !data.purchasePrice) return;
+            setPortfolioProperties((prev) =>
+              prev.map((p) => {
+                if (p.id !== propertyForDocs.id) return p;
+                const updates: Partial<PortfolioProperty> = {};
+                if (data.monthlyRent && data.monthlyRent > 0) updates.monthlyRent = data.monthlyRent;
+                if (data.purchasePrice && data.purchasePrice > 0) updates.purchasePrice = data.purchasePrice;
+                if (Object.keys(updates).length === 0) return p;
+                const merged = { ...p, ...updates };
+                const grossYield = computeGrossYield(merged.monthlyRent, merged.purchasePrice);
+                return { ...merged, annualYieldPercent: grossYield };
+              })
+            );
+          }}
         />
       )}
 

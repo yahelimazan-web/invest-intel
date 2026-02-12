@@ -240,6 +240,42 @@ export async function deleteDocument(
 }
 
 /**
+ * Rename a document (update file_name)
+ */
+export async function renameDocument(
+  userId: string,
+  documentId: string,
+  newFileName: string
+): Promise<{ success: boolean; error?: string }> {
+  if (!supabase || supabase === null) {
+    return { success: false, error: "Supabase not initialized" };
+  }
+
+  try {
+    try {
+      await supabase.rpc('set_user_context', { user_id_param: userId });
+    } catch (rpcError) {
+      console.warn("[Documents] set_user_context RPC not available");
+    }
+
+    const { error } = await supabase
+      .from("property_documents")
+      .update({ file_name: newFileName.trim(), updated_at: new Date().toISOString() })
+      .eq("id", documentId)
+      .eq("user_id", userId);
+
+    if (error) {
+      console.error("[Documents] Rename error:", error);
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error("[Documents] Failed to rename document:", error);
+    return { success: false, error: error?.message };
+  }
+}
+
+/**
  * Search documents by semantic similarity (requires embedding)
  */
 export async function searchDocumentsSemantically(

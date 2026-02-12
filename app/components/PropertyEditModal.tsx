@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import { computeGrossYield, computeNetYield } from "../lib/property-yield";
 
-export type PropertyStatus = "rented" | "needs_attention";
+export type ropertyStatus = "rented" | "needs_attention";
 export type PropertyCountry = "UK";
 
 export interface PropertyEnrichment {
@@ -54,7 +55,8 @@ export default function PropertyEditModal({ property, onSave, onClose }: Propert
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(form);
+    const grossYield = form.purchasePrice > 0 ? computeGrossYield(form.monthlyRent, form.purchasePrice) : form.annualYieldPercent;
+    onSave({ ...form, annualYieldPercent: grossYield });
     onClose();
   };
 
@@ -102,6 +104,17 @@ export default function PropertyEditModal({ property, onSave, onClose }: Propert
             />
           </div>
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Featured Image URL</label>
+            <input
+              type="url"
+              value={form.image ?? ""}
+              onChange={(e) => setForm((p) => ({ ...p, image: e.target.value.trim() || null }))}
+              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+              placeholder="e.g. Zoopla photo URL or direct image link"
+            />
+            <p className="text-xs text-slate-500 mt-1">Paste a link to a property photo (Zoopla, Rightmove, etc.)</p>
+          </div>
+          <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Postcode (UK)</label>
             <input
               type="text"
@@ -113,7 +126,7 @@ export default function PropertyEditModal({ property, onSave, onClose }: Propert
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Monthly cashflow (£)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Monthly rent (£)</label>
               <input
                 type="number"
                 min={0}
@@ -124,28 +137,24 @@ export default function PropertyEditModal({ property, onSave, onClose }: Propert
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Annual yield %</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">Purchase price (£)</label>
               <input
                 type="number"
                 min={0}
-                max={100}
-                step={0.1}
-                value={form.annualYieldPercent ?? ""}
-                onChange={(e) => setForm((p) => ({ ...p, annualYieldPercent: Number(e.target.value) || 0 }))}
+                step={1000}
+                value={form.purchasePrice || ""}
+                onChange={(e) => setForm((p) => ({ ...p, purchasePrice: Number(e.target.value) || 0 }))}
                 className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
               />
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">Purchase price (£)</label>
-            <input
-              type="number"
-              min={0}
-              step={1000}
-              value={form.purchasePrice || ""}
-              onChange={(e) => setForm((p) => ({ ...p, purchasePrice: Number(e.target.value) || 0 }))}
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-            />
+            <div className="col-span-2 p-3 rounded-xl bg-slate-50 border border-slate-200">
+              <p className="text-sm font-medium text-slate-700 mb-1">Yield (auto-calculated)</p>
+              <p className="text-slate-600 text-sm">
+                Gross: <span className="font-semibold text-teal-600">{form.purchasePrice > 0 ? computeGrossYield(form.monthlyRent, form.purchasePrice).toFixed(1) : "—"}%</span>
+                {" · "}
+                Net (incl. 10% mgmt): <span className="font-semibold text-slate-700">{form.purchasePrice > 0 ? computeNetYield(form.monthlyRent, form.purchasePrice).toFixed(1) : "—"}%</span>
+              </p>
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">Purchase date</label>

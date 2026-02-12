@@ -7,19 +7,19 @@ import { supabase } from "../../../lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const { documentId, userId } = await request.json();
+    const { documentId, userId, propertyId } = await request.json();
 
     if (!documentId || !userId) {
       return NextResponse.json(
         { success: false, error: "documentId and userId are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!supabase || supabase === null) {
       return NextResponse.json(
         { success: false, error: "Supabase not initialized" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     if (fetchError || !doc) {
       return NextResponse.json(
         { success: false, error: "Document not found" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -46,13 +46,14 @@ export async function POST(request: NextRequest) {
     if (downloadError || !fileData) {
       return NextResponse.json(
         { success: false, error: "Failed to download file" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     let extractedText = "";
     let embedding: number[] | null = null;
     let summary: string | null = null;
+    let extractedData: { monthlyRent?: number; purchasePrice?: number } = {};
 
     // Process PDF files with OCR (pdf-parse v2: named export PDFParse, no default)
     if (doc.file_type === "application/pdf") {
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
                   parts: [{ text: extractedText.substring(0, 10000) }], // Limit to 10k chars
                 },
               }),
-            }
+            },
           );
 
           if (response.ok) {
@@ -104,18 +105,59 @@ export async function POST(request: NextRequest) {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                contents: [{
-                  parts: [{
-                    text: `Summarize this property document in 2-3 sentences in Hebrew:\n\n${extractedText.substring(0, 5000)}`
-                  }]
-                }],
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: `Summarize this property document in 2-3 sentences in Hebrew:\n\n${extractedText.substring(0, 5000)}`,
+                      },
+                    ],
+                  },
+                ],
               }),
-            }
+            },
           );
 
           if (summaryResponse.ok) {
             const summaryData = await summaryResponse.json();
-            summary = summaryData.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            summary =
+              summaryData.candidates?.[0]?.content?.parts?.[0]?.text || null;
+          }
+
+          // Extract structured data (monthly rent, purchase price) for property auto-population
+          const textSample = extractedText.substring(0, 8000);
+          const folderId = doc.folder_id || "";
+          const extractPrompt =
+            folderId === "rental" || folderId === "tenancy"
+              ? `From this tenancy/rental agreement, extract the monthly rent in GBP. Return ONLY a JSON object: {"monthlyRent": number} or {"monthlyRent": null} if not found. Look for amounts like "£950 per month", "950 GBP", "rent: 950", etc.\n\n${textSample}`
+              : folderId === "purchase" || folderId === "purchase-contracts"
+                ? `From this purchase contract/sale document, extract the purchase price in GBP. Return ONLY a JSON object: {"purchasePrice": number} or {"purchasePrice": null} if not found. Look for amounts like "£180,000", "180000", "purchase price: 180000", etc.\n\n${textSample}`
+                : `From this document, extract any monthly rent (GBP) and/or purchase price (GBP) if present. Return ONLY a JSON object: {"monthlyRent": number|null, "purchasePrice": number|null}.\n\n${textSample}`;
+
+          try {
+            const extractResponse = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${geminiApiKey}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ parts: [{ text: extractPrompt }] }],
+                  generationConfig: { maxOutputTokens: 128 },
+                }),
+              }
+            );
+            if (extractResponse.ok) {
+              const extractData = await extractResponse.json();
+              const rawText = extractData.candidates?.[0]?.content?.parts?.[0]?.text || "";
+              const jsonMatch = rawText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                const parsed = JSON.parse(jsonMatch[0]);
+                if (typeof parsed.monthlyRent === "number" && parsed.monthlyRent > 0) extractedData.monthlyRent = parsed.monthlyRent;
+                if (typeof parsed.purchasePrice === "number" && parsed.purchasePrice > 0) extractedData.purchasePrice = parsed.purchasePrice;
+              }
+            }
+          } catch (extractErr) {
+            console.warn("[OCR] Extract structured data failed:", extractErr);
           }
         }
       } catch (aiError) {
@@ -135,7 +177,7 @@ export async function POST(request: NextRequest) {
     // Add embedding if available (PostgreSQL vector format: [1,2,3])
     if (embedding && Array.isArray(embedding)) {
       // Convert to PostgreSQL vector format string
-      updateData.embedding = `[${embedding.join(',')}]`;
+      updateData.embedding = `[${embedding.join(",")}]`;
     }
 
     const { error: updateError } = await supabase
@@ -148,7 +190,7 @@ export async function POST(request: NextRequest) {
       console.error("[OCR] Update error:", updateError);
       return NextResponse.json(
         { success: false, error: "Failed to update document" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -157,12 +199,14 @@ export async function POST(request: NextRequest) {
       extractedText,
       hasEmbedding: !!embedding,
       summary,
+      extractedData: extractedData ?? {},
+      propertyId: propertyId ?? null,
     });
   } catch (error: any) {
     console.error("[OCR API] Error:", error);
     return NextResponse.json(
       { success: false, error: error?.message || "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

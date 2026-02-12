@@ -57,6 +57,7 @@ export default function Sidebar({ currentPage, onPageChange }: SidebarProps) {
       className="fixed left-0 top-0 h-full bg-slate-900 border-r border-slate-800 z-40 flex flex-col transition-[width] duration-300 ease-in-out"
       style={{ width }}
       aria-label="Main navigation"
+      suppressHydrationWarning
     >
         {/* Logo */}
         <div className="h-16 flex items-center justify-between px-4 border-b border-slate-800 shrink-0">
