@@ -92,16 +92,24 @@ const UK_REGIONS = [
 // Area Radar Component - UK-Wide Deal Scanner
 // =============================================================================
 
-export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarProps) {
+export default function AreaRadar({
+  isOpen,
+  onClose,
+  onDealClick,
+}: AreaRadarProps) {
   const { user, isLoading: authLoading } = useAuth();
-  
-  const [watchedPostcodes, setWatchedPostcodes] = useState<WatchedPostcode[]>([]);
+
+  const [watchedPostcodes, setWatchedPostcodes] = useState<WatchedPostcode[]>(
+    [],
+  );
   const [newPostcode, setNewPostcode] = useState("");
   const [isAdding, setIsAdding] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isScanningUK, setIsScanningUK] = useState(false);
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["deals", "watched"]));
-  
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(["deals", "watched"]),
+  );
+
   // UK-wide deals feed
   const [ukDeals, setUkDeals] = useState<PropertyDeal[]>([]);
   const [regionalSummary, setRegionalSummary] = useState<RegionalSummary[]>([]);
@@ -113,10 +121,14 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   // Load watched postcodes from user-specific localStorage
   useEffect(() => {
     if (authLoading) return;
-    
+
     try {
       const userId = user?.id || null;
-      const saved = getUserData<WatchedPostcode[]>(userId, "investintel-watched-postcodes", []);
+      const saved = getUserData<WatchedPostcode[]>(
+        userId,
+        "investintel-watched-postcodes",
+        [],
+      );
       setWatchedPostcodes(saved);
     } catch (e) {
       console.error("Failed to load watched postcodes:", e);
@@ -126,7 +138,7 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   // Save watched postcodes to user-specific localStorage
   useEffect(() => {
     if (authLoading) return;
-    
+
     try {
       const userId = user?.id || null;
       setUserData(userId, "investintel-watched-postcodes", watchedPostcodes);
@@ -138,9 +150,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   // Add new postcode to watch
   const addPostcode = useCallback(async () => {
     if (!newPostcode.trim()) return;
-    
+
     const normalized = newPostcode.toUpperCase().trim().replace(/\s+/g, " ");
-    
+
     // Check if already watching
     if (watchedPostcodes.some((p) => p.postcode === normalized)) {
       setNewPostcode("");
@@ -158,7 +170,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
 
     // Scan this postcode for deals
     try {
-      const response = await fetch(`/api/market-radar?postcode=${encodeURIComponent(normalized)}&minDiscount=15`);
+      const response = await fetch(
+        `/api/market-radar?postcode=${encodeURIComponent(normalized)}&minDiscount=15`,
+      );
       if (response.ok) {
         const data = await response.json();
         newWatched.deals = data.deals || [];
@@ -181,7 +195,7 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   // Scan all watched postcodes
   const scanWatched = useCallback(async () => {
     if (watchedPostcodes.length === 0) return;
-    
+
     setIsScanning(true);
 
     try {
@@ -194,16 +208,19 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
 
       if (response.ok) {
         const data = await response.json();
-        
+
         // Update each watched postcode with its deals
         setWatchedPostcodes((prev) =>
           prev.map((wp) => ({
             ...wp,
-            deals: data.deals?.filter((d: PropertyDeal) => 
-              d.postcode.toUpperCase().startsWith(wp.postcode.replace(/\s+/g, "").toUpperCase())
-            ) || [],
+            deals:
+              data.deals?.filter((d: PropertyDeal) =>
+                d.postcode
+                  .toUpperCase()
+                  .startsWith(wp.postcode.replace(/\s+/g, "").toUpperCase()),
+              ) || [],
             lastChecked: new Date().toISOString(),
-          }))
+          })),
         );
       }
     } catch (error) {
@@ -222,13 +239,13 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
         minDiscount: "15",
         limit: "100",
       });
-      
+
       if (region && region !== "All Regions") {
         params.set("region", region);
       }
 
       const response = await fetch(`/api/market-radar?${params.toString()}`);
-      
+
       if (response.ok) {
         const data = await response.json();
         setUkDeals(data.deals || []);
@@ -252,9 +269,10 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   }, [isOpen, ukDeals.length, scanUKWide]);
 
   // Filter deals by region
-  const filteredDeals = selectedRegion === "All Regions" 
-    ? ukDeals 
-    : ukDeals.filter((d) => d.region === selectedRegion);
+  const filteredDeals =
+    selectedRegion === "All Regions"
+      ? ukDeals
+      : ukDeals.filter((d) => d.region === selectedRegion);
 
   // Toggle section
   const toggleSection = (section: string) => {
@@ -272,13 +290,17 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
   // Mark deal as seen
   const markAsSeen = useCallback((dealId: string) => {
     setUkDeals((prev) =>
-      prev.map((d) => (d.id === dealId ? { ...d, seen: true } : d))
+      prev.map((d) => (d.id === dealId ? { ...d, seen: true } : d)),
     );
   }, []);
 
   // Count new deals
-  const newDealsCount = ukDeals.filter((d) => !d.seen).length + 
-    watchedPostcodes.reduce((sum, wp) => sum + wp.deals.filter((d) => !d.seen).length, 0);
+  const newDealsCount =
+    ukDeals.filter((d) => !d.seen).length +
+    watchedPostcodes.reduce(
+      (sum, wp) => sum + wp.deals.filter((d) => !d.seen).length,
+      0,
+    );
 
   if (!isOpen) return null;
 
@@ -323,7 +345,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
             <p className="text-xs text-slate-500">Hot Deals (20%+)</p>
           </div>
           <div className="bg-slate-800 rounded-lg p-2 text-center">
-            <p className="text-lg font-bold text-emerald-400">{watchedPostcodes.length}</p>
+            <p className="text-lg font-bold text-emerald-400">
+              {watchedPostcodes.length}
+            </p>
             <p className="text-xs text-slate-500">Watching</p>
           </div>
         </div>
@@ -341,7 +365,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-cyan-400" />
               <span className="font-medium text-white">UK Deals Feed</span>
-              <span className="text-xs text-slate-500">({filteredDeals.length})</span>
+              <span className="text-xs text-slate-500">
+                ({filteredDeals.length})
+              </span>
             </div>
             {expandedSections.has("deals") ? (
               <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -366,7 +392,7 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                     }
                   }}
                   className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#00C805]"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                   autoComplete="off"
                   disabled={isAdding}
                 />
@@ -383,17 +409,19 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                   )}
                 </button>
               </div>
-              
+
               {/* Filter & Scan Controls */}
               <div className="flex gap-2">
                 <select
                   value={selectedRegion}
                   onChange={(e) => setSelectedRegion(e.target.value)}
                   className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:border-cyan-500"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 >
                   {UK_REGIONS.map((region) => (
-                    <option key={region} value={region}>{region}</option>
+                    <option key={region} value={region}>
+                      {region}
+                    </option>
                   ))}
                 </select>
                 <button
@@ -420,13 +448,17 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
               {isScanningUK ? (
                 <div className="py-8 text-center">
                   <Loader2 className="w-8 h-8 text-cyan-400 animate-spin mx-auto mb-2" />
-                  <p className="text-slate-400 text-sm">Scanning UK market...</p>
+                  <p className="text-slate-400 text-sm">
+                    Scanning UK market...
+                  </p>
                 </div>
               ) : filteredDeals.length === 0 ? (
                 <div className="py-6 text-center">
                   <Target className="w-10 h-10 text-slate-600 mx-auto mb-2" />
                   <p className="text-slate-400 text-sm">No deals found</p>
-                  <p className="text-slate-500 text-xs">Try scanning again or change region</p>
+                  <p className="text-slate-500 text-xs">
+                    Try scanning again or change region
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-80 overflow-y-auto">
@@ -442,7 +474,7 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                         deal.isHotDeal
                           ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 border border-amber-500/30 hover:border-amber-400/50"
                           : "bg-slate-800/50 border border-slate-700 hover:border-cyan-500/50",
-                        !deal.seen && "ring-1 ring-cyan-500/50"
+                        !deal.seen && "ring-1 ring-cyan-500/50",
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
@@ -463,10 +495,14 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                           </div>
                         </div>
                         <div className="text-right flex-shrink-0">
-                          <div className={cn(
-                            "font-bold text-sm",
-                            deal.discount >= 20 ? "text-amber-400" : "text-emerald-400"
-                          )}>
+                          <div
+                            className={cn(
+                              "font-bold text-sm",
+                              deal.discount >= 20
+                                ? "text-amber-400"
+                                : "text-emerald-400",
+                            )}
+                          >
                             -{deal.discount}%
                           </div>
                           <div className="text-xs text-slate-500">
@@ -507,7 +543,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
             <div className="flex items-center gap-2">
               <Eye className="w-4 h-4 text-emerald-400" />
               <span className="font-medium text-white">Watched Postcodes</span>
-              <span className="text-xs text-slate-500">({watchedPostcodes.length})</span>
+              <span className="text-xs text-slate-500">
+                ({watchedPostcodes.length})
+              </span>
             </div>
             {expandedSections.has("watched") ? (
               <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -527,7 +565,7 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                   onKeyDown={(e) => e.key === "Enter" && addPostcode()}
                   placeholder="e.g. L32 or M1"
                   className="flex-1 px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:border-emerald-500"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
                 <button
                   type="button"
@@ -569,8 +607,12 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
               <div className="space-y-2">
                 {watchedPostcodes.length === 0 ? (
                   <div className="py-4 text-center">
-                    <p className="text-slate-500 text-sm">No postcodes watched yet</p>
-                    <p className="text-slate-600 text-xs">Add a postcode to get alerts</p>
+                    <p className="text-slate-500 text-sm">
+                      No postcodes watched yet
+                    </p>
+                    <p className="text-slate-600 text-xs">
+                      Add a postcode to get alerts
+                    </p>
                   </div>
                 ) : (
                   watchedPostcodes.map((wp) => (
@@ -581,7 +623,9 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <MapPin className="w-4 h-4 text-emerald-400" />
-                          <span className="font-medium text-white">{wp.postcode}</span>
+                          <span className="font-medium text-white">
+                            {wp.postcode}
+                          </span>
                           {wp.deals.length > 0 && (
                             <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-400 text-xs rounded-full">
                               {wp.deals.length} deals
@@ -596,24 +640,30 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-                      
+
                       {/* Deals for this postcode */}
                       {wp.deals.length > 0 && (
                         <div className="space-y-1 mt-2">
                           {wp.deals.slice(0, 3).map((deal) => (
                             <div
                               key={deal.id}
-                              onClick={() => onDealClick?.(deal.postcode, deal.address)}
+                              onClick={() =>
+                                onDealClick?.(deal.postcode, deal.address)
+                              }
                               className="p-2 bg-slate-700/50 rounded cursor-pointer hover:bg-slate-700 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <span className="text-sm text-slate-300 truncate flex-1">
                                   {deal.address}
                                 </span>
-                                <span className={cn(
-                                  "text-sm font-medium",
-                                  deal.discount >= 20 ? "text-amber-400" : "text-emerald-400"
-                                )}>
+                                <span
+                                  className={cn(
+                                    "text-sm font-medium",
+                                    deal.discount >= 20
+                                      ? "text-amber-400"
+                                      : "text-emerald-400",
+                                  )}
+                                >
                                   -{deal.discount}%
                                 </span>
                               </div>
@@ -626,10 +676,11 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                           )}
                         </div>
                       )}
-                      
+
                       {wp.lastChecked && (
                         <p className="text-xs text-slate-600 mt-2">
-                          Checked: {new Date(wp.lastChecked).toLocaleString("he-IL")}
+                          Checked:{" "}
+                          {new Date(wp.lastChecked).toLocaleString("he-IL")}
                         </p>
                       )}
                     </div>
@@ -653,16 +704,23 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
                   key={region.region}
                   className="flex items-center justify-between py-1.5 px-2 hover:bg-slate-800/50 rounded transition-colors"
                 >
-                  <span className="text-sm text-slate-300">{region.region}</span>
+                  <span className="text-sm text-slate-300">
+                    {region.region}
+                  </span>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-white">
                       £{(region.averagePrice / 1000).toFixed(0)}K
                     </span>
-                    <span className={cn(
-                      "text-xs",
-                      region.yearChange >= 0 ? "text-emerald-400" : "text-red-400"
-                    )}>
-                      {region.yearChange >= 0 ? "+" : ""}{region.yearChange.toFixed(1)}%
+                    <span
+                      className={cn(
+                        "text-xs",
+                        region.yearChange >= 0
+                          ? "text-emerald-400"
+                          : "text-red-400",
+                      )}
+                    >
+                      {region.yearChange >= 0 ? "+" : ""}
+                      {region.yearChange.toFixed(1)}%
                     </span>
                     {region.dealsCount > 0 && (
                       <span className="px-1.5 py-0.5 bg-cyan-500/20 text-cyan-400 text-xs rounded">
@@ -696,11 +754,11 @@ export default function AreaRadar({ isOpen, onClose, onDealClick }: AreaRadarPro
 }
 
 // Toggle button component for external use
-export function RadarToggleButton({ 
-  onClick, 
-  alertCount = 0 
-}: { 
-  onClick: () => void; 
+export function RadarToggleButton({
+  onClick,
+  alertCount = 0,
+}: {
+  onClick: () => void;
   alertCount?: number;
 }) {
   return (

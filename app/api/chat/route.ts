@@ -8,7 +8,9 @@ import { createClient } from "@supabase/supabase-js";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -42,7 +44,7 @@ async function fetchUserProperties(userId: string): Promise<PropertyData[]> {
 
     // Set user context for RLS (if RPC exists)
     try {
-      await supabase.rpc('set_user_context', { user_id_param: userId });
+      await supabase.rpc("set_user_context", { user_id_param: userId });
     } catch (rpcError) {
       // RPC might not exist, continue with service role key
       console.warn("[Chat API] set_user_context RPC not available");
@@ -112,7 +114,7 @@ function buildSystemPrompt(properties: PropertyData[]): string {
 אין נכסים בתיק כרגע. המשתמש יכול להוסיף נכסים דרך דף "הנכסים שלי".`;
   } else {
     prompt += `נתוני תיק ההשקעות (${properties.length} נכסים):\n\n`;
-    
+
     properties.forEach((prop, index) => {
       prompt += `נכס ${index + 1}:
 - כתובת: ${prop.address}
@@ -130,23 +132,28 @@ ${prop.energyRating ? `- דירוג אנרגטי: ${prop.energyRating}` : ""}
 
     // Calculate totals for quick reference
     const totalMonthlyRent = properties
-      .filter(p => p.monthlyRent)
+      .filter((p) => p.monthlyRent)
       .reduce((sum, p) => sum + (p.monthlyRent || 0), 0);
-    
+
     const totalPurchasePrice = properties
-      .filter(p => p.purchasePrice)
+      .filter((p) => p.purchasePrice)
       .reduce((sum, p) => sum + (p.purchasePrice || 0), 0);
 
-    const propertiesByCountry = properties.reduce((acc, p) => {
-      acc[p.country] = (acc[p.country] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>);
+    const propertiesByCountry = properties.reduce(
+      (acc, p) => {
+        acc[p.country] = (acc[p.country] || 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
 
     prompt += `סיכום תיק ההשקעות:
 - סה"כ שכירות חודשית: £${totalMonthlyRent.toLocaleString()}
 - סה"כ שכירות שנתית: £${(totalMonthlyRent * 12).toLocaleString()}
 - סה"כ הון מושקע: £${totalPurchasePrice.toLocaleString()}
-- נכסים לפי מדינה: ${Object.entries(propertiesByCountry).map(([country, count]) => `${country}: ${count}`).join(", ")}
+- נכסים לפי מדינה: ${Object.entries(propertiesByCountry)
+      .map(([country, count]) => `${country}: ${count}`)
+      .join(", ")}
 
 `;
   }
@@ -165,33 +172,28 @@ ${prop.energyRating ? `- דירוג אנרגטי: ${prop.energyRating}` : ""}
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, userId, history = [] } = body as {
+    const {
+      message,
+      userId,
+      history = [],
+    } = body as {
       message: string;
       userId: string;
       history?: ChatMessage[];
     };
 
     if (!message) {
-      return NextResponse.json(
-        { error: "נדרשת הודעה" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "נדרשת הודעה" }, { status: 400 });
     }
 
     if (!userId) {
-      return NextResponse.json(
-        { error: "נדרש מזהה משתמש" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "נדרש מזהה משתמש" }, { status: 400 });
     }
 
     // Check for API key
     if (!GEMINI_API_KEY) {
       console.warn("[Chat API] No GEMINI_API_KEY configured");
-      return NextResponse.json(
-        { error: "מפתח API לא מוגדר" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "מפתח API לא מוגדר" }, { status: 500 });
     }
 
     // Fetch user's property data from Supabase
@@ -217,7 +219,9 @@ export async function POST(request: NextRequest) {
         },
         {
           role: "model",
-          parts: [{ text: "הבנתי. אני מוכן לענות על שאלות על תיק ההשקעות שלך." }],
+          parts: [
+            { text: "הבנתי. אני מוכן לענות על שאלות על תיק ההשקעות שלך." },
+          ],
         },
         ...chatHistory,
       ],
@@ -237,7 +241,7 @@ export async function POST(request: NextRequest) {
     if (!responseText) {
       return NextResponse.json(
         { error: "לא התקבלה תשובה מה-AI" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -246,21 +250,20 @@ export async function POST(request: NextRequest) {
       source: "gemini",
       propertiesCount: properties.length,
     });
-
   } catch (error: any) {
     console.error("[Chat API] Error:", error);
-    
+
     // Handle specific Gemini API errors
     if (error.message?.includes("429")) {
       return NextResponse.json(
         { error: "חריגה ממכסת הבקשות, נסה שוב מאוחר יותר" },
-        { status: 429 }
+        { status: 429 },
       );
     }
 
     return NextResponse.json(
       { error: error.message || "שגיאה בעיבוד הבקשה" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

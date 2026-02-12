@@ -50,16 +50,16 @@ export interface FinancialResults {
   depositAmount: number;
   monthlyMortgage: number;
   annualMortgage: number;
-  
+
   // Income
   grossAnnualRent: number;
   effectiveAnnualRent: number;
   monthlyNetRent: number;
-  
+
   // Expenses
   totalAnnualExpenses: number;
   totalMonthlyCosts: number;
-  
+
   // Returns
   grossYield: number;
   netYield: number;
@@ -67,12 +67,12 @@ export interface FinancialResults {
   cashOnCash: number;
   monthlyCashFlow: number;
   annualCashFlow: number;
-  
+
   // Investment
   totalCashRequired: number;
   breakEvenRent: number;
   paybackYears: number;
-  
+
   // Stress Test
   maxRateBeforeLoss: number;
   maxVacancyBeforeLoss: number;
@@ -84,14 +84,20 @@ interface FinancialSimulatorProps {
   sqm?: number | null;
   epcRating?: string | null;
   postcode?: string;
-  onResultsChange?: (results: FinancialResults, inputs: FinancialInputs) => void;
+  onResultsChange?: (
+    results: FinancialResults,
+    inputs: FinancialInputs,
+  ) => void;
 }
 
 // =============================================================================
 // UK Stamp Duty Calculator
 // =============================================================================
 
-function calculateStampDuty(price: number, isAdditional: boolean = true): number {
+function calculateStampDuty(
+  price: number,
+  isAdditional: boolean = true,
+): number {
   // UK rates for additional properties (as of 2024)
   const rates = isAdditional
     ? [
@@ -103,7 +109,7 @@ function calculateStampDuty(price: number, isAdditional: boolean = true): number
     : [
         { threshold: 250000, rate: 0 },
         { threshold: 925000, rate: 0.05 },
-        { threshold: 1500000, rate: 0.10 },
+        { threshold: 1500000, rate: 0.1 },
         { threshold: Infinity, rate: 0.12 },
       ];
 
@@ -142,7 +148,7 @@ export default function FinancialSimulator({
   const BOE_BASE_RATE = 3.75;
   const BTL_MARGIN = 1.5;
   const DEFAULT_BTL_RATE = BOE_BASE_RATE + BTL_MARGIN; // 5.25%
-  
+
   const [inputs, setInputs] = useState<FinancialInputs>({
     purchasePrice: initialPurchasePrice,
     depositPercent: 25,
@@ -164,7 +170,7 @@ export default function FinancialSimulator({
 
   // Update stamp duty when price changes
   useEffect(() => {
-    setInputs(prev => ({
+    setInputs((prev) => ({
       ...prev,
       stampDuty: calculateStampDuty(prev.purchasePrice),
     }));
@@ -173,7 +179,7 @@ export default function FinancialSimulator({
   // Update from props
   useEffect(() => {
     if (initialPurchasePrice > 0) {
-      setInputs(prev => ({
+      setInputs((prev) => ({
         ...prev,
         purchasePrice: initialPurchasePrice,
         monthlyRent: initialRent || Math.round(initialPurchasePrice * 0.004),
@@ -208,10 +214,11 @@ export default function FinancialSimulator({
     const loanAmount = purchasePrice - depositAmount;
     const monthlyRate = mortgageRate / 100 / 12;
     const numPayments = mortgageTerm * 12;
-    const monthlyMortgage = loanAmount > 0
-      ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
-        (Math.pow(1 + monthlyRate, numPayments) - 1)
-      : 0;
+    const monthlyMortgage =
+      loanAmount > 0
+        ? (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+          (Math.pow(1 + monthlyRate, numPayments) - 1)
+        : 0;
     const annualMortgage = monthlyMortgage * 12;
 
     // Income calculations
@@ -222,7 +229,13 @@ export default function FinancialSimulator({
     // Expense calculations
     const managementCost = (effectiveAnnualRent * managementFee) / 100;
     const maintenanceCost = (effectiveAnnualRent * maintenanceReserve) / 100;
-    const totalAnnualExpenses = managementCost + maintenanceCost + insurance + councilTax + groundRent + serviceCharge;
+    const totalAnnualExpenses =
+      managementCost +
+      maintenanceCost +
+      insurance +
+      councilTax +
+      groundRent +
+      serviceCharge;
     const totalMonthlyCosts = annualMortgage / 12 + totalAnnualExpenses / 12;
 
     // Net operating income (before mortgage)
@@ -239,25 +252,31 @@ export default function FinancialSimulator({
     const capRate = (noi / purchasePrice) * 100;
 
     // Cash on cash return
-    const totalCashRequired = depositAmount + stampDuty + legalFees + surveyFees + refurbCost;
-    const cashOnCash = totalCashRequired > 0 ? (annualCashFlow / totalCashRequired) * 100 : 0;
+    const totalCashRequired =
+      depositAmount + stampDuty + legalFees + surveyFees + refurbCost;
+    const cashOnCash =
+      totalCashRequired > 0 ? (annualCashFlow / totalCashRequired) * 100 : 0;
 
     // Break-even rent (to cover all costs)
     const breakEvenRent = (annualMortgage + totalAnnualExpenses) / 12;
 
     // Payback period
-    const paybackYears = annualCashFlow > 0 ? totalCashRequired / annualCashFlow : Infinity;
+    const paybackYears =
+      annualCashFlow > 0 ? totalCashRequired / annualCashFlow : Infinity;
 
     // Stress tests
     // Max interest rate before loss
     let maxRate = mortgageRate;
     for (let testRate = mortgageRate; testRate <= 15; testRate += 0.25) {
       const testMonthlyRate = testRate / 100 / 12;
-      const testMonthlyMortgage = loanAmount > 0
-        ? (loanAmount * testMonthlyRate * Math.pow(1 + testMonthlyRate, numPayments)) /
-          (Math.pow(1 + testMonthlyRate, numPayments) - 1)
-        : 0;
-      const testCashFlow = noi - (testMonthlyMortgage * 12);
+      const testMonthlyMortgage =
+        loanAmount > 0
+          ? (loanAmount *
+              testMonthlyRate *
+              Math.pow(1 + testMonthlyRate, numPayments)) /
+            (Math.pow(1 + testMonthlyRate, numPayments) - 1)
+          : 0;
+      const testCashFlow = noi - testMonthlyMortgage * 12;
       if (testCashFlow < 0) {
         maxRate = testRate - 0.25;
         break;
@@ -308,9 +327,12 @@ export default function FinancialSimulator({
   }, [results, inputs, onResultsChange]);
 
   // Update input handler
-  const updateInput = useCallback((key: keyof FinancialInputs, value: number) => {
-    setInputs(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const updateInput = useCallback(
+    (key: keyof FinancialInputs, value: number) => {
+      setInputs((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   // Reset to defaults
   const resetInputs = useCallback(() => {
@@ -336,9 +358,16 @@ export default function FinancialSimulator({
 
   // Determine investment quality
   const investmentRating = useMemo(() => {
-    if (results.cashOnCash >= 10 && results.netYield >= 6) return { label: "מצוין", color: "text-emerald-400", bg: "bg-emerald-500/20" };
-    if (results.cashOnCash >= 5 && results.netYield >= 4) return { label: "טוב", color: "text-blue-400", bg: "bg-blue-500/20" };
-    if (results.cashOnCash >= 0) return { label: "סביר", color: "text-amber-400", bg: "bg-amber-500/20" };
+    if (results.cashOnCash >= 10 && results.netYield >= 6)
+      return {
+        label: "מצוין",
+        color: "text-emerald-400",
+        bg: "bg-emerald-500/20",
+      };
+    if (results.cashOnCash >= 5 && results.netYield >= 4)
+      return { label: "טוב", color: "text-blue-400", bg: "bg-blue-500/20" };
+    if (results.cashOnCash >= 0)
+      return { label: "סביר", color: "text-amber-400", bg: "bg-amber-500/20" };
     return { label: "שלילי", color: "text-red-400", bg: "bg-red-500/20" };
   }, [results]);
 
@@ -360,10 +389,20 @@ export default function FinancialSimulator({
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className={cn("px-3 py-1 rounded-full text-sm font-bold", investmentRating.bg, investmentRating.color)}>
+          <span
+            className={cn(
+              "px-3 py-1 rounded-full text-sm font-bold",
+              investmentRating.bg,
+              investmentRating.color,
+            )}
+          >
             {investmentRating.label}
           </span>
-          {isExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-slate-400" />
+          )}
         </div>
       </button>
 
@@ -373,37 +412,63 @@ export default function FinancialSimulator({
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             <div className="bg-slate-900/50 rounded-lg p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Gross Yield</p>
-              <p className={cn("text-xl font-bold", results.grossYield >= 6 ? "text-emerald-400" : "text-white")}>
+              <p
+                className={cn(
+                  "text-xl font-bold",
+                  results.grossYield >= 6 ? "text-emerald-400" : "text-white",
+                )}
+              >
                 {results.grossYield.toFixed(1)}%
               </p>
             </div>
             <div className="bg-slate-900/50 rounded-lg p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Net Yield</p>
-              <p className={cn("text-xl font-bold", results.netYield >= 5 ? "text-emerald-400" : "text-white")}>
+              <p
+                className={cn(
+                  "text-xl font-bold",
+                  results.netYield >= 5 ? "text-emerald-400" : "text-white",
+                )}
+              >
                 {results.netYield.toFixed(1)}%
               </p>
             </div>
             <div className="bg-slate-900/50 rounded-lg p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Cap Rate</p>
-              <p className={cn("text-xl font-bold", results.capRate >= 5 ? "text-emerald-400" : "text-white")}>
+              <p
+                className={cn(
+                  "text-xl font-bold",
+                  results.capRate >= 5 ? "text-emerald-400" : "text-white",
+                )}
+              >
                 {results.capRate.toFixed(1)}%
               </p>
             </div>
             <div className="bg-slate-900/50 rounded-lg p-3 text-center">
               <p className="text-xs text-slate-500 mb-1">Cash-on-Cash</p>
-              <p className={cn("text-xl font-bold", results.cashOnCash >= 8 ? "text-emerald-400" : results.cashOnCash < 0 ? "text-red-400" : "text-white")}>
+              <p
+                className={cn(
+                  "text-xl font-bold",
+                  results.cashOnCash >= 8
+                    ? "text-emerald-400"
+                    : results.cashOnCash < 0
+                      ? "text-red-400"
+                      : "text-white",
+                )}
+              >
                 {results.cashOnCash.toFixed(1)}%
               </p>
             </div>
           </div>
 
           {/* Cash Flow Summary */}
-          <div className={cn(
-            "rounded-xl p-4 border",
-            results.monthlyCashFlow >= 0 
-              ? "bg-emerald-500/10 border-emerald-500/30" 
-              : "bg-red-500/10 border-red-500/30"
-          )}>
+          <div
+            className={cn(
+              "rounded-xl p-4 border",
+              results.monthlyCashFlow >= 0
+                ? "bg-emerald-500/10 border-emerald-500/30"
+                : "bg-red-500/10 border-red-500/30",
+            )}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {results.monthlyCashFlow >= 0 ? (
@@ -413,11 +478,16 @@ export default function FinancialSimulator({
                 )}
                 <span className="text-sm text-slate-300">Cash Flow חודשי</span>
               </div>
-              <p className={cn(
-                "text-2xl font-bold",
-                results.monthlyCashFlow >= 0 ? "text-emerald-400" : "text-red-400"
-              )}>
-                {results.monthlyCashFlow >= 0 ? "+" : ""}{formatCurrency(results.monthlyCashFlow, "GBP")}
+              <p
+                className={cn(
+                  "text-2xl font-bold",
+                  results.monthlyCashFlow >= 0
+                    ? "text-emerald-400"
+                    : "text-red-400",
+                )}
+              >
+                {results.monthlyCashFlow >= 0 ? "+" : ""}
+                {formatCurrency(results.monthlyCashFlow, "GBP")}
               </p>
             </div>
             <p className="text-xs text-slate-500 mt-2 text-left">
@@ -446,7 +516,9 @@ export default function FinancialSimulator({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-slate-400">מחיר רכישה</label>
-                <span className="text-sm font-bold text-white">{formatCurrency(inputs.purchasePrice, "GBP")}</span>
+                <span className="text-sm font-bold text-white">
+                  {formatCurrency(inputs.purchasePrice, "GBP")}
+                </span>
               </div>
               <input
                 type="range"
@@ -454,7 +526,9 @@ export default function FinancialSimulator({
                 max={1000000}
                 step={5000}
                 value={inputs.purchasePrice}
-                onChange={(e) => updateInput("purchasePrice", Number(e.target.value))}
+                onChange={(e) =>
+                  updateInput("purchasePrice", Number(e.target.value))
+                }
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
               />
             </div>
@@ -463,7 +537,9 @@ export default function FinancialSimulator({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-slate-400">שכירות חודשית</label>
-                <span className="text-sm font-bold text-white">{formatCurrency(inputs.monthlyRent, "GBP")}</span>
+                <span className="text-sm font-bold text-white">
+                  {formatCurrency(inputs.monthlyRent, "GBP")}
+                </span>
               </div>
               <input
                 type="range"
@@ -471,7 +547,9 @@ export default function FinancialSimulator({
                 max={5000}
                 step={25}
                 value={inputs.monthlyRent}
-                onChange={(e) => updateInput("monthlyRent", Number(e.target.value))}
+                onChange={(e) =>
+                  updateInput("monthlyRent", Number(e.target.value))
+                }
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
               />
             </div>
@@ -480,7 +558,9 @@ export default function FinancialSimulator({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-slate-400">ריבית משכנתא</label>
-                <span className="text-sm font-bold text-white">{inputs.mortgageRate.toFixed(1)}%</span>
+                <span className="text-sm font-bold text-white">
+                  {inputs.mortgageRate.toFixed(1)}%
+                </span>
               </div>
               <input
                 type="range"
@@ -488,7 +568,9 @@ export default function FinancialSimulator({
                 max={10}
                 step={0.25}
                 value={inputs.mortgageRate}
-                onChange={(e) => updateInput("mortgageRate", Number(e.target.value))}
+                onChange={(e) =>
+                  updateInput("mortgageRate", Number(e.target.value))
+                }
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
               />
             </div>
@@ -497,7 +579,9 @@ export default function FinancialSimulator({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-slate-400">שיעור אי-תפוסה</label>
-                <span className="text-sm font-bold text-white">{inputs.vacancyRate}%</span>
+                <span className="text-sm font-bold text-white">
+                  {inputs.vacancyRate}%
+                </span>
               </div>
               <input
                 type="range"
@@ -505,7 +589,9 @@ export default function FinancialSimulator({
                 max={25}
                 step={1}
                 value={inputs.vacancyRate}
-                onChange={(e) => updateInput("vacancyRate", Number(e.target.value))}
+                onChange={(e) =>
+                  updateInput("vacancyRate", Number(e.target.value))
+                }
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
               />
             </div>
@@ -514,7 +600,10 @@ export default function FinancialSimulator({
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs text-slate-400">הון עצמי</label>
-                <span className="text-sm font-bold text-white">{inputs.depositPercent}% ({formatCurrency(results.depositAmount, "GBP")})</span>
+                <span className="text-sm font-bold text-white">
+                  {inputs.depositPercent}% (
+                  {formatCurrency(results.depositAmount, "GBP")})
+                </span>
               </div>
               <input
                 type="range"
@@ -522,7 +611,9 @@ export default function FinancialSimulator({
                 max={100}
                 step={5}
                 value={inputs.depositPercent}
-                onChange={(e) => updateInput("depositPercent", Number(e.target.value))}
+                onChange={(e) =>
+                  updateInput("depositPercent", Number(e.target.value))
+                }
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
               />
             </div>
@@ -535,7 +626,11 @@ export default function FinancialSimulator({
             className="w-full flex items-center justify-center gap-2 py-2 text-sm text-slate-400 hover:text-white transition-colors"
           >
             {showAdvanced ? "הסתר הגדרות מתקדמות" : "הצג הגדרות מתקדמות"}
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showAdvanced ? (
+              <ChevronUp className="w-4 h-4" />
+            ) : (
+              <ChevronDown className="w-4 h-4" />
+            )}
           </button>
 
           {showAdvanced && (
@@ -545,9 +640,11 @@ export default function FinancialSimulator({
                 <input
                   type="number"
                   value={inputs.managementFee}
-                  onChange={(e) => updateInput("managementFee", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("managementFee", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
@@ -555,9 +652,11 @@ export default function FinancialSimulator({
                 <input
                   type="number"
                   value={inputs.maintenanceReserve}
-                  onChange={(e) => updateInput("maintenanceReserve", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("maintenanceReserve", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
@@ -565,19 +664,25 @@ export default function FinancialSimulator({
                 <input
                   type="number"
                   value={inputs.insurance}
-                  onChange={(e) => updateInput("insurance", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("insurance", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500">ארנונה שנתית (£)</label>
+                <label className="text-xs text-slate-500">
+                  ארנונה שנתית (£)
+                </label>
                 <input
                   type="number"
                   value={inputs.councilTax}
-                  onChange={(e) => updateInput("councilTax", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("councilTax", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
@@ -585,19 +690,25 @@ export default function FinancialSimulator({
                 <input
                   type="number"
                   value={inputs.stampDuty}
-                  onChange={(e) => updateInput("stampDuty", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("stampDuty", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500">עלויות משפטיות (£)</label>
+                <label className="text-xs text-slate-500">
+                  עלויות משפטיות (£)
+                </label>
                 <input
                   type="number"
                   value={inputs.legalFees}
-                  onChange={(e) => updateInput("legalFees", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("legalFees", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
@@ -605,19 +716,25 @@ export default function FinancialSimulator({
                 <input
                   type="number"
                   value={inputs.refurbCost}
-                  onChange={(e) => updateInput("refurbCost", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("refurbCost", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
               <div>
-                <label className="text-xs text-slate-500">Service Charge (£)</label>
+                <label className="text-xs text-slate-500">
+                  Service Charge (£)
+                </label>
                 <input
                   type="number"
                   value={inputs.serviceCharge}
-                  onChange={(e) => updateInput("serviceCharge", Number(e.target.value))}
+                  onChange={(e) =>
+                    updateInput("serviceCharge", Number(e.target.value))
+                  }
                   className="input text-sm mt-1"
-                  style={{ color: 'white' }}
+                  style={{ color: "white" }}
                 />
               </div>
             </div>
@@ -629,24 +746,38 @@ export default function FinancialSimulator({
               <tbody className="divide-y divide-slate-800">
                 <tr>
                   <td className="px-3 py-2 text-slate-400">הון עצמי נדרש</td>
-                  <td className="px-3 py-2 text-white font-semibold text-left">{formatCurrency(results.totalCashRequired, "GBP")}</td>
+                  <td className="px-3 py-2 text-white font-semibold text-left">
+                    {formatCurrency(results.totalCashRequired, "GBP")}
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-3 py-2 text-slate-400">משכנתא חודשית</td>
-                  <td className="px-3 py-2 text-white font-semibold text-left">{formatCurrency(results.monthlyMortgage, "GBP")}</td>
+                  <td className="px-3 py-2 text-white font-semibold text-left">
+                    {formatCurrency(results.monthlyMortgage, "GBP")}
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-2 text-slate-400">שכירות נטו (אחרי vacancy)</td>
-                  <td className="px-3 py-2 text-white font-semibold text-left">{formatCurrency(results.monthlyNetRent, "GBP")}</td>
+                  <td className="px-3 py-2 text-slate-400">
+                    שכירות נטו (אחרי vacancy)
+                  </td>
+                  <td className="px-3 py-2 text-white font-semibold text-left">
+                    {formatCurrency(results.monthlyNetRent, "GBP")}
+                  </td>
                 </tr>
                 <tr>
-                  <td className="px-3 py-2 text-slate-400">שכירות Break-Even</td>
-                  <td className="px-3 py-2 text-amber-400 font-semibold text-left">{formatCurrency(results.breakEvenRent, "GBP")}</td>
+                  <td className="px-3 py-2 text-slate-400">
+                    שכירות Break-Even
+                  </td>
+                  <td className="px-3 py-2 text-amber-400 font-semibold text-left">
+                    {formatCurrency(results.breakEvenRent, "GBP")}
+                  </td>
                 </tr>
                 <tr>
                   <td className="px-3 py-2 text-slate-400">זמן החזר השקעה</td>
                   <td className="px-3 py-2 text-white font-semibold text-left">
-                    {results.paybackYears < 100 ? `${results.paybackYears.toFixed(1)} שנים` : "∞"}
+                    {results.paybackYears < 100
+                      ? `${results.paybackYears.toFixed(1)} שנים`
+                      : "∞"}
                   </td>
                 </tr>
               </tbody>
@@ -662,11 +793,15 @@ export default function FinancialSimulator({
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div>
                 <p className="text-slate-400">ריבית מקסימלית לפני הפסד</p>
-                <p className="text-white font-bold">{results.maxRateBeforeLoss.toFixed(1)}%</p>
+                <p className="text-white font-bold">
+                  {results.maxRateBeforeLoss.toFixed(1)}%
+                </p>
               </div>
               <div>
                 <p className="text-slate-400">Vacancy מקסימלי לפני הפסד</p>
-                <p className="text-white font-bold">{results.maxVacancyBeforeLoss}%</p>
+                <p className="text-white font-bold">
+                  {results.maxVacancyBeforeLoss}%
+                </p>
               </div>
             </div>
           </div>

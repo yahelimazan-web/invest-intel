@@ -14,17 +14,19 @@ export async function GET(request: NextRequest) {
   if (!address && !postcode) {
     return NextResponse.json(
       { error: "Address or postcode required", imageUrl: null },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   const apiKey =
-    process.env.GOOGLE_MAPS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    process.env.GOOGLE_MAPS_API_KEY ||
+    process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   if (!apiKey || apiKey === "your_google_key") {
     return NextResponse.json({
       imageUrl: null,
-      message: "Google Maps API key not configured. Add GOOGLE_MAPS_API_KEY to .env.local",
+      message:
+        "Google Maps API key not configured. Add GOOGLE_MAPS_API_KEY to .env.local",
     });
   }
 

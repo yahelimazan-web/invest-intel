@@ -14,8 +14,13 @@ export async function GET(request: NextRequest) {
 
   if (!address.trim() && !postcode.trim()) {
     return NextResponse.json(
-      { error: "Address or postcode required", lat: null, lon: null, osmMapUrl: null },
-      { status: 400 }
+      {
+        error: "Address or postcode required",
+        lat: null,
+        lon: null,
+        osmMapUrl: null,
+      },
+      { status: 400 },
     );
   }
 
@@ -30,9 +35,10 @@ export async function GET(request: NextRequest) {
       })}`,
       {
         headers: {
-          "User-Agent": "InvestIntel/1.0 (UK property portfolio; https://invest-intel.app)",
+          "User-Agent":
+            "InvestIntel/1.0 (UK property portfolio; https://invest-intel.app)",
         },
-      }
+      },
     );
 
     const data = await res.json();
@@ -55,7 +61,7 @@ export async function GET(request: NextRequest) {
     console.error("[Geocode] Error:", error);
     return NextResponse.json(
       { error: "Geocoding failed", lat: null, lon: null, osmMapUrl: null },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

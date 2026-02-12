@@ -5,7 +5,8 @@ import { NextRequest, NextResponse } from "next/server";
 // =============================================================================
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const GEMINI_API_URL =
+  "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -22,16 +23,15 @@ export async function POST(request: NextRequest) {
     };
 
     if (!message) {
-      return NextResponse.json(
-        { error: "נדרשת הודעה" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "נדרשת הודעה" }, { status: 400 });
     }
 
     // Check for API key
     if (!GEMINI_API_KEY) {
-      console.warn("[AI Chat] No GEMINI_API_KEY configured, using fallback response");
-      
+      console.warn(
+        "[AI Chat] No GEMINI_API_KEY configured, using fallback response",
+      );
+
       // Return a helpful fallback response
       return NextResponse.json({
         response: generateFallbackResponse(message, context),
@@ -110,25 +110,25 @@ ${context}
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[AI Chat] Gemini API Error:", response.status, errorText);
-      
+
       if (response.status === 429) {
         return NextResponse.json(
           { error: "חריגה ממכסת הבקשות, נסה שוב מאוחר יותר" },
-          { status: 429 }
+          { status: 429 },
         );
       }
-      
+
       return NextResponse.json(
         { error: `שגיאת API: ${response.status}` },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
     const data = await response.json();
-    
+
     // Extract response text
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
+
     if (!responseText) {
       console.error("[AI Chat] No response text in Gemini response:", data);
       return NextResponse.json({
@@ -141,13 +141,9 @@ ${context}
       response: responseText,
       source: "gemini",
     });
-
   } catch (error) {
     console.error("[AI Chat] Error:", error);
-    return NextResponse.json(
-      { error: "שגיאה בעיבוד הבקשה" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "שגיאה בעיבוד הבקשה" }, { status: 500 });
   }
 }
 
@@ -157,42 +153,45 @@ ${context}
 
 function generateFallbackResponse(message: string, context: string): string {
   const messageLower = message.toLowerCase();
-  
+
   // Extract some data from context
   const epcMatch = context.match(/דירוג אנרגטי: ([A-G])/);
   const priceMatch = context.match(/מחיר ממוצע.*?: £([\d,]+)/);
   const areaMatch = context.match(/שטח כולל: (\d+)/);
   const crimeMatch = context.match(/רמת סיכון: (\S+)/);
-  
+
   const epc = epcMatch?.[1];
   const avgPrice = priceMatch?.[1];
   const area = areaMatch?.[1];
   const crimeRisk = crimeMatch?.[1];
-  
+
   // Generate contextual response
   if (messageLower.includes("השקעה") || messageLower.includes("פוטנציאל")) {
     let response = "**ניתוח פוטנציאל ההשקעה:**\n\n";
-    
+
     if (epc) {
       response += `דירוג ה-EPC הנוכחי הוא ${epc}. `;
       if (["E", "F", "G"].includes(epc)) {
-        response += "זהו דירוג נמוך שעשוי להצריך השקעה בשיפור יעילות אנרגטית, אך מציע פוטנציאל לעליית ערך לאחר שיפוץ.\n\n";
+        response +=
+          "זהו דירוג נמוך שעשוי להצריך השקעה בשיפור יעילות אנרגטית, אך מציע פוטנציאל לעליית ערך לאחר שיפוץ.\n\n";
       } else if (["A", "B", "C"].includes(epc)) {
-        response += "זהו דירוג טוב שמעיד על נכס יעיל אנרגטית ואטרקטיבי לשוכרים.\n\n";
+        response +=
+          "זהו דירוג טוב שמעיד על נכס יעיל אנרגטית ואטרקטיבי לשוכרים.\n\n";
       }
     }
-    
+
     if (crimeRisk) {
       response += `רמת הפשיעה באזור: ${crimeRisk}. `;
       if (crimeRisk === "נמוך") {
         response += "זהו יתרון משמעותי להשכרה לטווח ארוך.\n\n";
       }
     }
-    
-    response += "\n*שים לב: להפעלת ניתוח AI מלא, הוסף מפתח GEMINI_API_KEY לקובץ .env.local*";
+
+    response +=
+      "\n*שים לב: להפעלת ניתוח AI מלא, הוסף מפתח GEMINI_API_KEY לקובץ .env.local*";
     return response;
   }
-  
+
   if (messageLower.includes("מחיר") || messageLower.includes("שוק")) {
     let response = "**ניתוח מחירים:**\n\n";
     if (avgPrice) {
@@ -209,37 +208,37 @@ function generateFallbackResponse(message: string, context: string): string {
     }
     return response;
   }
-  
+
   if (messageLower.includes("סיכון") || messageLower.includes("בעיה")) {
     let response = "**ניתוח סיכונים:**\n\n";
-    
+
     if (crimeRisk) {
       response += `- **פשיעה**: רמת סיכון ${crimeRisk}\n`;
     }
     if (epc && ["E", "F", "G"].includes(epc)) {
       response += `- **אנרגיה**: דירוג EPC נמוך (${epc}) עלול להשפיע על ערך הנכס ועלויות תפעול\n`;
     }
-    
+
     response += "\n*להפעלת ניתוח מקיף יותר, הוסף מפתח Gemini API*";
     return response;
   }
-  
+
   if (messageLower.includes("epc") || messageLower.includes("אנרגיה")) {
     if (epc) {
       const epcInfo: Record<string, string> = {
-        "A": "מעולה - הנכס יעיל מאוד אנרגטית, עלויות חימום/קירור נמוכות",
-        "B": "טוב מאוד - יעילות גבוהה עם מקום קטן לשיפור",
-        "C": "טוב - יעילות סבירה, מתאים לרוב הדיירים",
-        "D": "בינוני - ממוצע ארצי, יש מקום לשיפור",
-        "E": "נמוך - עלויות אנרגיה גבוהות, מומלץ לשפר",
-        "F": "חלש - דורש שיפוץ אנרגטי משמעותי",
-        "G": "חלש מאוד - עלויות גבוהות, חובה לשפר לפני השכרה",
+        A: "מעולה - הנכס יעיל מאוד אנרגטית, עלויות חימום/קירור נמוכות",
+        B: "טוב מאוד - יעילות גבוהה עם מקום קטן לשיפור",
+        C: "טוב - יעילות סבירה, מתאים לרוב הדיירים",
+        D: "בינוני - ממוצע ארצי, יש מקום לשיפור",
+        E: "נמוך - עלויות אנרגיה גבוהות, מומלץ לשפר",
+        F: "חלש - דורש שיפוץ אנרגטי משמעותי",
+        G: "חלש מאוד - עלויות גבוהות, חובה לשפר לפני השכרה",
       };
       return `**דירוג EPC: ${epc}**\n\n${epcInfo[epc] || "לא ידוע"}\n\n${area ? `שטח הנכס: ${area} מ"ר` : ""}`;
     }
     return "לא נמצאו נתוני EPC עבור נכס זה.";
   }
-  
+
   // Default response
   return `אני יכול לעזור לך לנתח את הנכס!
 

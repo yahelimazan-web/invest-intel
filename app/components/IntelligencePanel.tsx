@@ -24,7 +24,10 @@ import {
   CheckCircle2,
   Clock,
 } from "lucide-react";
-import type { PropertyIntelligence, PointOfInterest } from "../lib/intelligenceEngine";
+import type {
+  PropertyIntelligence,
+  PointOfInterest,
+} from "../lib/intelligenceEngine";
 
 interface IntelligencePanelProps {
   data: PropertyIntelligence;
@@ -47,7 +50,10 @@ const POI_LABELS: Record<PointOfInterest["type"], string> = {
   park: "פארק",
 };
 
-export default function IntelligencePanel({ data, onClose }: IntelligencePanelProps) {
+export default function IntelligencePanel({
+  data,
+  onClose,
+}: IntelligencePanelProps) {
   const formatDistance = (meters: number) => {
     if (meters >= 1000) {
       return `${(meters / 1000).toFixed(1)} ק״מ`;
@@ -58,8 +64,10 @@ export default function IntelligencePanel({ data, onClose }: IntelligencePanelPr
   const formatCurrency = (amount: number) => `£${amount.toLocaleString()}`;
 
   const getCrimeLevel = (total: number) => {
-    if (total < 20) return { level: "נמוך", color: "text-emerald-600", bg: "bg-emerald-100" };
-    if (total < 50) return { level: "בינוני", color: "text-amber-600", bg: "bg-amber-100" };
+    if (total < 20)
+      return { level: "נמוך", color: "text-emerald-600", bg: "bg-emerald-100" };
+    if (total < 50)
+      return { level: "בינוני", color: "text-amber-600", bg: "bg-amber-100" };
     return { level: "גבוה", color: "text-red-600", bg: "bg-red-100" };
   };
 
@@ -74,7 +82,10 @@ export default function IntelligencePanel({ data, onClose }: IntelligencePanelPr
   const closestHospital = getClosestByType("hospital");
 
   return (
-    <div className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto" dir="rtl">
+    <div
+      className="fixed inset-y-0 right-0 w-full sm:w-[480px] bg-white dark:bg-gray-900 shadow-2xl z-50 overflow-y-auto"
+      dir="rtl"
+    >
       {/* Header */}
       <div className="sticky top-0 bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-5 z-10">
         <div className="flex items-start justify-between">
@@ -266,7 +277,9 @@ export default function IntelligencePanel({ data, onClose }: IntelligencePanelPr
           {/* All POIs */}
           {data.nearbyPOIs.length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500 font-medium">נקודות עניין נוספות:</p>
+              <p className="text-xs text-gray-500 font-medium">
+                נקודות עניין נוספות:
+              </p>
               <div className="max-h-40 overflow-y-auto space-y-2">
                 {data.nearbyPOIs.slice(0, 6).map((poi, idx) => {
                   const Icon = POI_ICONS[poi.type];
@@ -309,7 +322,9 @@ export default function IntelligencePanel({ data, onClose }: IntelligencePanelPr
               </p>
               <p className="text-xs text-gray-500">אירועים בחודש</p>
             </div>
-            <div className={`${crimeLevel.bg} dark:bg-opacity-20 rounded-xl p-4 flex-1`}>
+            <div
+              className={`${crimeLevel.bg} dark:bg-opacity-20 rounded-xl p-4 flex-1`}
+            >
               <div className="flex items-center gap-2">
                 {data.crimeSummary.total >= 50 && (
                   <AlertTriangle className={`w-5 h-5 ${crimeLevel.color}`} />
@@ -325,7 +340,9 @@ export default function IntelligencePanel({ data, onClose }: IntelligencePanelPr
           {/* Crime breakdown */}
           {Object.keys(data.crimeSummary.byCategory).length > 0 && (
             <div className="space-y-2">
-              <p className="text-xs text-gray-500 font-medium">פירוט לפי קטגוריה:</p>
+              <p className="text-xs text-gray-500 font-medium">
+                פירוט לפי קטגוריה:
+              </p>
               <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto">
                 {Object.entries(data.crimeSummary.byCategory)
                   .sort(([, a], [, b]) => b - a)

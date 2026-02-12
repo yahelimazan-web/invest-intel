@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
     if (!lat || !lng) {
       return NextResponse.json(
         { error: "lat and lng are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -54,7 +54,10 @@ export async function GET(request: NextRequest) {
 
     // Search for different infrastructure types
     const placeTypes = [
-      { type: "transport" as const, query: "train_station|subway_station|bus_station" },
+      {
+        type: "transport" as const,
+        query: "train_station|subway_station|bus_station",
+      },
       { type: "education" as const, query: "school|university" },
       { type: "healthcare" as const, query: "hospital|pharmacy|doctor" },
     ];
@@ -66,7 +69,7 @@ export async function GET(request: NextRequest) {
           `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${query}&key=${googleApiKey}`,
           {
             next: { revalidate: 3600 }, // Cache for 1 hour
-          }
+          },
         );
 
         if (!response.ok) {
@@ -122,7 +125,7 @@ export async function GET(request: NextRequest) {
     console.error("[Places] API error:", error);
     return NextResponse.json(
       { error: error?.message || "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

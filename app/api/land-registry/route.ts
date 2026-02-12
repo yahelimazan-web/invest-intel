@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * HM Land Registry - Price Paid Data API
- * 
+ *
  * Uses the FREE public SPARQL endpoint to fetch property transaction data.
  * No API key or license agreement required for basic queries.
- * 
+ *
  * Endpoint: https://landregistry.data.gov.uk/landregistry/query
  * Documentation: https://landregistry.data.gov.uk/app/root/qonsole
  */
@@ -20,15 +20,16 @@ export async function GET(request: NextRequest) {
   if (!postcode) {
     return NextResponse.json(
       { error: "Postcode is required", code: "MISSING_POSTCODE" },
-      { status: 400 }
+      { status: 400 },
     );
   }
 
   // Format postcode with space (Land Registry format: "L32 5TE")
   const cleanPostcode = postcode.replace(/\s+/g, "").toUpperCase();
-  const formattedPostcode = cleanPostcode.length > 4 
-    ? `${cleanPostcode.slice(0, -3)} ${cleanPostcode.slice(-3)}`
-    : cleanPostcode;
+  const formattedPostcode =
+    cleanPostcode.length > 4
+      ? `${cleanPostcode.slice(0, -3)} ${cleanPostcode.slice(-3)}`
+      : cleanPostcode;
 
   console.log(`[Land Registry] Fetching sales for: ${formattedPostcode}`);
 
@@ -64,7 +65,7 @@ LIMIT ${limit}
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
-        "Accept": "application/sparql-results+json",
+        Accept: "application/sparql-results+json",
       },
       body: `query=${encodeURIComponent(sparqlQuery)}`,
     });
@@ -74,19 +75,19 @@ LIMIT ${limit}
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`[Land Registry] Error: ${errorText.substring(0, 500)}`);
-      
+
       return NextResponse.json(
-        { 
-          error: `Land Registry API error: ${response.status}`, 
+        {
+          error: `Land Registry API error: ${response.status}`,
           code: "API_ERROR",
-          message: "שגיאה בגישה לנתוני רשם המקרקעין"
+          message: "שגיאה בגישה לנתוני רשם המקרקעין",
         },
-        { status: response.status }
+        { status: response.status },
       );
     }
 
     const data = await response.json();
-    
+
     const transactions = data.results?.bindings || [];
     console.log(`[Land Registry] Found ${transactions.length} transactions`);
 
@@ -97,14 +98,17 @@ LIMIT ${limit}
         row.paon?.value,
         row.street?.value,
         row.town?.value,
-      ].filter(Boolean).join(", ");
+      ]
+        .filter(Boolean)
+        .join(", ");
 
       // Extract property type from URI
       let propertyType = "Unknown";
       if (row.propertyType?.value) {
         const typeUri = row.propertyType.value;
         if (typeUri.includes("detached")) propertyType = "Detached";
-        else if (typeUri.includes("semi-detached")) propertyType = "Semi-Detached";
+        else if (typeUri.includes("semi-detached"))
+          propertyType = "Semi-Detached";
         else if (typeUri.includes("terraced")) propertyType = "Terraced";
         else if (typeUri.includes("flat")) propertyType = "Flat/Maisonette";
       }
@@ -132,11 +136,15 @@ LIMIT ${limit}
     // Calculate statistics
     const totalTransactions = sales.length;
     const latestSale = sales[0] || null;
-    
+
     // Calculate average price
-    const avgPrice = totalTransactions > 0
-      ? Math.round(sales.reduce((sum: number, s: any) => sum + s.price, 0) / totalTransactions)
-      : null;
+    const avgPrice =
+      totalTransactions > 0
+        ? Math.round(
+            sales.reduce((sum: number, s: any) => sum + s.price, 0) /
+              totalTransactions,
+          )
+        : null;
 
     // Group by year for trend analysis
     const byYear: Record<string, { total: number; count: number }> = {};
@@ -156,7 +164,9 @@ LIMIT ${limit}
       .sort((a, b) => a.year.localeCompare(b.year));
 
     if (latestSale) {
-      console.log(`[Land Registry] Latest: £${latestSale.price.toLocaleString()} on ${latestSale.date}`);
+      console.log(
+        `[Land Registry] Latest: £${latestSale.price.toLocaleString()} on ${latestSale.date}`,
+      );
     }
 
     return NextResponse.json({
@@ -169,16 +179,15 @@ LIMIT ${limit}
       yearlyAverages,
       source: "HM Land Registry (Price Paid Data)",
     });
-
   } catch (error) {
     console.error("[Land Registry] Network Error:", error);
     return NextResponse.json(
-      { 
-        error: "Network error", 
+      {
+        error: "Network error",
         code: "NETWORK_ERROR",
-        message: "שגיאת רשת בגישה לרשם המקרקעין"
+        message: "שגיאת רשת בגישה לרשם המקרקעין",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

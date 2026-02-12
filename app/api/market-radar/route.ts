@@ -34,15 +34,112 @@ interface RegionalAverage {
 
 // UK Regions for scanning
 const UK_REGIONS = [
-  { code: "E12000001", name: "North East", postcodePrefix: ["NE", "DH", "SR", "TS", "DL"] },
-  { code: "E12000002", name: "North West", postcodePrefix: ["L", "M", "WA", "WN", "BL", "OL", "SK", "CW", "CH", "PR", "FY", "BB", "LA", "CA"] },
-  { code: "E12000003", name: "Yorkshire and The Humber", postcodePrefix: ["LS", "BD", "HG", "YO", "HU", "DN", "S", "HD", "WF", "HX"] },
-  { code: "E12000004", name: "East Midlands", postcodePrefix: ["NG", "DE", "LE", "NN", "PE", "LN"] },
-  { code: "E12000005", name: "West Midlands", postcodePrefix: ["B", "CV", "DY", "WS", "WV", "ST", "TF", "WR", "HR"] },
-  { code: "E12000006", name: "East of England", postcodePrefix: ["CB", "CO", "IP", "NR", "CM", "SS", "SG", "AL", "EN", "LU", "MK"] },
-  { code: "E12000007", name: "London", postcodePrefix: ["E", "EC", "N", "NW", "SE", "SW", "W", "WC"] },
-  { code: "E12000008", name: "South East", postcodePrefix: ["BN", "RH", "TN", "CT", "ME", "DA", "BR", "CR", "SM", "KT", "TW", "UB", "HA", "SL", "HP", "OX", "RG", "GU", "PO", "SO"] },
-  { code: "E12000009", name: "South West", postcodePrefix: ["BS", "BA", "GL", "SN", "BH", "DT", "SP", "TA", "EX", "TQ", "PL", "TR"] },
+  {
+    code: "E12000001",
+    name: "North East",
+    postcodePrefix: ["NE", "DH", "SR", "TS", "DL"],
+  },
+  {
+    code: "E12000002",
+    name: "North West",
+    postcodePrefix: [
+      "L",
+      "M",
+      "WA",
+      "WN",
+      "BL",
+      "OL",
+      "SK",
+      "CW",
+      "CH",
+      "PR",
+      "FY",
+      "BB",
+      "LA",
+      "CA",
+    ],
+  },
+  {
+    code: "E12000003",
+    name: "Yorkshire and The Humber",
+    postcodePrefix: ["LS", "BD", "HG", "YO", "HU", "DN", "S", "HD", "WF", "HX"],
+  },
+  {
+    code: "E12000004",
+    name: "East Midlands",
+    postcodePrefix: ["NG", "DE", "LE", "NN", "PE", "LN"],
+  },
+  {
+    code: "E12000005",
+    name: "West Midlands",
+    postcodePrefix: ["B", "CV", "DY", "WS", "WV", "ST", "TF", "WR", "HR"],
+  },
+  {
+    code: "E12000006",
+    name: "East of England",
+    postcodePrefix: [
+      "CB",
+      "CO",
+      "IP",
+      "NR",
+      "CM",
+      "SS",
+      "SG",
+      "AL",
+      "EN",
+      "LU",
+      "MK",
+    ],
+  },
+  {
+    code: "E12000007",
+    name: "London",
+    postcodePrefix: ["E", "EC", "N", "NW", "SE", "SW", "W", "WC"],
+  },
+  {
+    code: "E12000008",
+    name: "South East",
+    postcodePrefix: [
+      "BN",
+      "RH",
+      "TN",
+      "CT",
+      "ME",
+      "DA",
+      "BR",
+      "CR",
+      "SM",
+      "KT",
+      "TW",
+      "UB",
+      "HA",
+      "SL",
+      "HP",
+      "OX",
+      "RG",
+      "GU",
+      "PO",
+      "SO",
+    ],
+  },
+  {
+    code: "E12000009",
+    name: "South West",
+    postcodePrefix: [
+      "BS",
+      "BA",
+      "GL",
+      "SN",
+      "BH",
+      "DT",
+      "SP",
+      "TA",
+      "EX",
+      "TQ",
+      "PL",
+      "TR",
+    ],
+  },
 ];
 
 // Cache for regional averages (1 hour cache)
@@ -86,7 +183,7 @@ async function fetchRegionalAverages(): Promise<Map<string, RegionalAverage>> {
       {
         headers: { Accept: "application/sparql-results+json" },
         next: { revalidate: 3600 },
-      }
+      },
     );
 
     if (response.ok) {
@@ -119,7 +216,7 @@ async function fetchRegionalAverages(): Promise<Map<string, RegionalAverage>> {
     "East Midlands": 235000,
     "West Midlands": 250000,
     "East of England": 340000,
-    "London": 523000,
+    London: 523000,
     "South East": 385000,
     "South West": 320000,
   };
@@ -175,7 +272,7 @@ async function fetchRecentTransactions(postcodePrefix: string): Promise<any[]> {
       `https://landregistry.data.gov.uk/landregistry/query?query=${encodeURIComponent(query)}`,
       {
         headers: { Accept: "application/sparql-results+json" },
-      }
+      },
     );
 
     if (response.ok) {
@@ -183,27 +280,35 @@ async function fetchRecentTransactions(postcodePrefix: string): Promise<any[]> {
       return data.results?.bindings || [];
     }
   } catch (error) {
-    console.error(`[Market Radar] Failed to fetch transactions for ${postcodePrefix}:`, error);
+    console.error(
+      `[Market Radar] Failed to fetch transactions for ${postcodePrefix}:`,
+      error,
+    );
   }
 
   return [];
 }
 
 // Simulate current listing prices (in production, would use Rightmove/Zoopla API)
-function simulateListingPrice(lastSoldPrice: number, monthsSinceSale: number): number {
+function simulateListingPrice(
+  lastSoldPrice: number,
+  monthsSinceSale: number,
+): number {
   // Simulate market movement and current asking price
   const marketGrowth = 0.02 * (monthsSinceSale / 12); // ~2% annual growth
   const sellerPremium = Math.random() * 0.1 - 0.05; // -5% to +5% variation
   const urgentSale = Math.random() < 0.15 ? -0.15 - Math.random() * 0.1 : 0; // 15% chance of urgent sale at -15% to -25%
-  
-  return Math.round(lastSoldPrice * (1 + marketGrowth + sellerPremium + urgentSale));
+
+  return Math.round(
+    lastSoldPrice * (1 + marketGrowth + sellerPremium + urgentSale),
+  );
 }
 
 // Detect deals from transactions
 async function detectDeals(
   postcodePrefix: string,
   regionName: string,
-  regionalAverage: number
+  regionalAverage: number,
 ): Promise<PropertyDeal[]> {
   const transactions = await fetchRecentTransactions(postcodePrefix);
   const deals: PropertyDeal[] = [];
@@ -212,7 +317,8 @@ async function detectDeals(
     const lastSoldPrice = parseFloat(tx.price?.value) || 0;
     const lastSoldDate = tx.date?.value || "";
     const monthsSinceSale = Math.floor(
-      (Date.now() - new Date(lastSoldDate).getTime()) / (30 * 24 * 60 * 60 * 1000)
+      (Date.now() - new Date(lastSoldDate).getTime()) /
+        (30 * 24 * 60 * 60 * 1000),
     );
 
     // Simulate current asking price
@@ -271,7 +377,7 @@ export async function GET(request: NextRequest) {
     if (postcode) {
       const prefix = postcode.split(" ")[0].replace(/[0-9]/g, "");
       regionsToScan = UK_REGIONS.filter((r) =>
-        r.postcodePrefix.some((p) => prefix.startsWith(p))
+        r.postcodePrefix.some((p) => prefix.startsWith(p)),
       );
     }
 
@@ -332,7 +438,10 @@ export async function POST(request: NextRequest) {
     const { postcodes } = body as { postcodes: string[] };
 
     if (!postcodes || postcodes.length === 0) {
-      return NextResponse.json({ error: "No postcodes provided" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No postcodes provided" },
+        { status: 400 },
+      );
     }
 
     const regionalAverages = await fetchRegionalAverages();
@@ -341,10 +450,10 @@ export async function POST(request: NextRequest) {
     for (const postcode of postcodes.slice(0, 10)) {
       // Limit to 10 postcodes
       const prefix = postcode.replace(/[0-9]/g, "").toUpperCase();
-      
+
       // Find region for this postcode
       const region = UK_REGIONS.find((r) =>
-        r.postcodePrefix.some((p) => prefix.startsWith(p))
+        r.postcodePrefix.some((p) => prefix.startsWith(p)),
       );
 
       if (region) {
@@ -365,6 +474,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("[Market Radar] POST Error:", error);
-    return NextResponse.json({ error: "Failed to scan postcodes" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to scan postcodes" },
+      { status: 500 },
+    );
   }
 }

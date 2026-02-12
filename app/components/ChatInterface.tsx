@@ -36,10 +36,7 @@ interface ChatInterfaceProps {
 // Chat Interface Component
 // =============================================================================
 
-export default function ChatInterface({
-  isOpen,
-  onClose,
-}: ChatInterfaceProps) {
+export default function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -143,12 +140,13 @@ export default function ChatInterface({
   if (!isOpen) return null;
 
   return (
-    <div className={cn(
-      "fixed z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 flex flex-col transition-all duration-300",
-      isExpanded
-        ? "inset-4"
-        : "bottom-4 left-4 w-96 h-[500px]"
-    )} dir="rtl">
+    <div
+      className={cn(
+        "fixed z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 flex flex-col transition-all duration-300",
+        isExpanded ? "inset-4" : "bottom-4 left-4 w-96 h-[500px]",
+      )}
+      dir="rtl"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
         <div className="flex items-center gap-2">
@@ -167,16 +165,20 @@ export default function ChatInterface({
             type="button"
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: "auto" }}
           >
-            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isExpanded ? (
+              <Minimize2 className="w-4 h-4" />
+            ) : (
+              <Maximize2 className="w-4 h-4" />
+            )}
           </button>
           <button
             type="button"
             onClick={clearChat}
             className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
             title="נקה שיחה"
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: "auto" }}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -184,7 +186,7 @@ export default function ChatInterface({
             type="button"
             onClick={onClose}
             className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
-            style={{ pointerEvents: 'auto' }}
+            style={{ pointerEvents: "auto" }}
           >
             <X className="w-4 h-4" />
           </button>
@@ -196,8 +198,10 @@ export default function ChatInterface({
         {messages.length === 0 && !isLoading && (
           <div className="text-center py-8">
             <Bot className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 text-sm mb-4">שאל אותי כל שאלה על תיק ההשקעות שלך</p>
-            
+            <p className="text-slate-400 text-sm mb-4">
+              שאל אותי כל שאלה על תיק ההשקעות שלך
+            </p>
+
             {/* Suggested Questions */}
             <div className="space-y-2">
               {suggestedQuestions.map((q, i) => (
@@ -209,7 +213,7 @@ export default function ChatInterface({
                     inputRef.current?.focus();
                   }}
                   className="block w-full text-right text-xs bg-slate-800/50 hover:bg-slate-700/50 text-slate-300 px-3 py-2 rounded-lg transition-colors"
-                  style={{ pointerEvents: 'auto' }}
+                  style={{ pointerEvents: "auto" }}
                 >
                   {q}
                 </button>
@@ -223,28 +227,35 @@ export default function ChatInterface({
             key={msg.id}
             className={cn(
               "flex gap-3",
-              msg.role === "user" ? "flex-row-reverse" : ""
+              msg.role === "user" ? "flex-row-reverse" : "",
             )}
           >
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-              msg.role === "user" ? "bg-emerald-500/20" : "bg-purple-500/20"
-            )}>
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                msg.role === "user" ? "bg-emerald-500/20" : "bg-purple-500/20",
+              )}
+            >
               {msg.role === "user" ? (
                 <User className="w-4 h-4 text-emerald-400" />
               ) : (
                 <Bot className="w-4 h-4 text-purple-400" />
               )}
             </div>
-            <div className={cn(
-              "flex-1 max-w-[80%] rounded-2xl px-4 py-2",
-              msg.role === "user"
-                ? "bg-emerald-500/20 text-white"
-                : "bg-slate-800 text-slate-200"
-            )}>
+            <div
+              className={cn(
+                "flex-1 max-w-[80%] rounded-2xl px-4 py-2",
+                msg.role === "user"
+                  ? "bg-emerald-500/20 text-white"
+                  : "bg-slate-800 text-slate-200",
+              )}
+            >
               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               <p className="text-xs text-slate-500 mt-1">
-                {new Date(msg.timestamp).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(msg.timestamp).toLocaleTimeString("he-IL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
           </div>
@@ -286,7 +297,7 @@ export default function ChatInterface({
             placeholder="שאל על תיק ההשקעות שלך..."
             disabled={isLoading || !user?.id}
             className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50"
-            style={{ color: 'white' }}
+            style={{ color: "white" }}
           />
           <button
             type="button"
@@ -296,9 +307,12 @@ export default function ChatInterface({
               "p-3 rounded-xl transition-all",
               isLoading || !inputValue.trim() || !user?.id
                 ? "bg-slate-700 text-slate-500 cursor-not-allowed"
-                : "bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                : "bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/20",
             )}
-            style={{ pointerEvents: isLoading || !inputValue.trim() || !user?.id ? 'none' : 'auto' }}
+            style={{
+              pointerEvents:
+                isLoading || !inputValue.trim() || !user?.id ? "none" : "auto",
+            }}
           >
             {isLoading ? (
               <Loader2 className="w-5 h-5 animate-spin" />
@@ -326,13 +340,16 @@ interface ChatToggleButtonProps {
   hasNewMessage?: boolean;
 }
 
-export function ChatToggleButton({ onClick, hasNewMessage }: ChatToggleButtonProps) {
+export function ChatToggleButton({
+  onClick,
+  hasNewMessage,
+}: ChatToggleButtonProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="fixed bottom-4 left-4 z-40 p-4 bg-gradient-to-br from-purple-500 to-blue-600 rounded-full shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all hover:scale-105"
-      style={{ pointerEvents: 'auto' }}
+      style={{ pointerEvents: "auto" }}
       title="פתח צ'אט AI"
     >
       <MessageCircle className="w-6 h-6 text-white" />

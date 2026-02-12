@@ -61,7 +61,7 @@ export default function InfrastructureRadar({
 
       try {
         const response = await fetch(
-          `/api/places?lat=${propertyLat}&lng=${propertyLng}&radius=${radius}`
+          `/api/places?lat=${propertyLat}&lng=${propertyLng}&radius=${radius}`,
         );
 
         if (response.ok) {
@@ -120,7 +120,9 @@ export default function InfrastructureRadar({
         </div>
       ) : totalItems === 0 ? (
         <div className="text-center py-8">
-          <p className="text-sm text-slate-400">לא נמצאו מתקני תשתית בקרבת מקום</p>
+          <p className="text-sm text-slate-400">
+            לא נמצאו מתקני תשתית בקרבת מקום
+          </p>
         </div>
       ) : (
         <div className="space-y-4">

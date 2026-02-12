@@ -105,92 +105,98 @@ export default function DocumentManager({
   }, [propertyId]);
 
   // Save documents to localStorage
-  const saveDocuments = useCallback((newDocs: DocumentMetadata[]) => {
-    try {
-      const saved = localStorage.getItem("investintel_documents");
-      const allDocs: DocumentMetadata[] = saved ? JSON.parse(saved) : [];
-      
-      // Remove old docs for this property, add new ones
-      const otherDocs = allDocs.filter((d) => d.propertyId !== propertyId);
-      const updated = [...otherDocs, ...newDocs];
-      
-      localStorage.setItem("investintel_documents", JSON.stringify(updated));
-      setDocuments(newDocs);
-    } catch (e) {
-      console.error("Failed to save documents:", e);
-      setError("שגיאה בשמירת המסמכים");
-    }
-  }, [propertyId]);
+  const saveDocuments = useCallback(
+    (newDocs: DocumentMetadata[]) => {
+      try {
+        const saved = localStorage.getItem("investintel_documents");
+        const allDocs: DocumentMetadata[] = saved ? JSON.parse(saved) : [];
+
+        // Remove old docs for this property, add new ones
+        const otherDocs = allDocs.filter((d) => d.propertyId !== propertyId);
+        const updated = [...otherDocs, ...newDocs];
+
+        localStorage.setItem("investintel_documents", JSON.stringify(updated));
+        setDocuments(newDocs);
+      } catch (e) {
+        console.error("Failed to save documents:", e);
+        setError("שגיאה בשמירת המסמכים");
+      }
+    },
+    [propertyId],
+  );
 
   // Handle file selection
-  const handleFiles = useCallback(async (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    
-    setIsUploading(true);
-    setError(null);
-    
-    const newDocs: DocumentMetadata[] = [];
-    
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      
-      // Validate file type
-      const isPdf = file.type === "application/pdf";
-      const isImage = file.type.startsWith("image/");
-      
-      if (!isPdf && !isImage) {
-        setError(`סוג קובץ לא נתמך: ${file.name}`);
-        continue;
-      }
-      
-      // Validate file size (max 5MB)
-      if (file.size > 5 * 1024 * 1024) {
-        setError(`הקובץ גדול מדי (מקסימום 5MB): ${file.name}`);
-        continue;
-      }
-      
-      try {
-        // Read file as base64
-        const dataUrl = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-        
-        // Extract text from PDF if applicable
-        let extractedText = "";
-        if (isPdf) {
-          extractedText = await extractTextFromPDF(dataUrl);
+  const handleFiles = useCallback(
+    async (files: FileList | null) => {
+      if (!files || files.length === 0) return;
+
+      setIsUploading(true);
+      setError(null);
+
+      const newDocs: DocumentMetadata[] = [];
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+
+        // Validate file type
+        const isPdf = file.type === "application/pdf";
+        const isImage = file.type.startsWith("image/");
+
+        if (!isPdf && !isImage) {
+          setError(`סוג קובץ לא נתמך: ${file.name}`);
+          continue;
         }
-        
-        const doc: DocumentMetadata = {
-          id: `doc-${Date.now()}-${i}`,
-          name: file.name,
-          type: isPdf ? "pdf" : isImage ? "image" : "other",
-          mimeType: file.type,
-          size: file.size,
-          uploadedAt: new Date().toISOString(),
-          propertyId,
-          propertyAddress,
-          postcode,
-          dataUrl,
-          extractedText,
-        };
-        
-        newDocs.push(doc);
-      } catch (e) {
-        console.error("Error processing file:", e);
-        setError(`שגיאה בעיבוד הקובץ: ${file.name}`);
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          setError(`הקובץ גדול מדי (מקסימום 5MB): ${file.name}`);
+          continue;
+        }
+
+        try {
+          // Read file as base64
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          // Extract text from PDF if applicable
+          let extractedText = "";
+          if (isPdf) {
+            extractedText = await extractTextFromPDF(dataUrl);
+          }
+
+          const doc: DocumentMetadata = {
+            id: `doc-${Date.now()}-${i}`,
+            name: file.name,
+            type: isPdf ? "pdf" : isImage ? "image" : "other",
+            mimeType: file.type,
+            size: file.size,
+            uploadedAt: new Date().toISOString(),
+            propertyId,
+            propertyAddress,
+            postcode,
+            dataUrl,
+            extractedText,
+          };
+
+          newDocs.push(doc);
+        } catch (e) {
+          console.error("Error processing file:", e);
+          setError(`שגיאה בעיבוד הקובץ: ${file.name}`);
+        }
       }
-    }
-    
-    if (newDocs.length > 0) {
-      saveDocuments([...documents, ...newDocs]);
-    }
-    
-    setIsUploading(false);
-  }, [documents, propertyId, propertyAddress, postcode, saveDocuments]);
+
+      if (newDocs.length > 0) {
+        saveDocuments([...documents, ...newDocs]);
+      }
+
+      setIsUploading(false);
+    },
+    [documents, propertyId, propertyAddress, postcode, saveDocuments],
+  );
 
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -203,29 +209,36 @@ export default function DocumentManager({
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    handleFiles(e.dataTransfer.files);
-  }, [handleFiles]);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      handleFiles(e.dataTransfer.files);
+    },
+    [handleFiles],
+  );
 
   // Delete document
-  const deleteDocument = useCallback((docId: string) => {
-    const updated = documents.filter((d) => d.id !== docId);
-    saveDocuments(updated);
-    if (selectedDoc?.id === docId) {
-      setSelectedDoc(null);
-    }
-  }, [documents, selectedDoc, saveDocuments]);
+  const deleteDocument = useCallback(
+    (docId: string) => {
+      const updated = documents.filter((d) => d.id !== docId);
+      saveDocuments(updated);
+      if (selectedDoc?.id === docId) {
+        setSelectedDoc(null);
+      }
+    },
+    [documents, selectedDoc, saveDocuments],
+  );
 
   // View document
-  const viewDocument = useCallback((doc: DocumentMetadata) => {
-    if (doc.dataUrl) {
-      // Open in new tab
-      const newWindow = window.open();
-      if (newWindow) {
-        if (doc.type === "pdf") {
-          newWindow.document.write(`
+  const viewDocument = useCallback(
+    (doc: DocumentMetadata) => {
+      if (doc.dataUrl) {
+        // Open in new tab
+        const newWindow = window.open();
+        if (newWindow) {
+          if (doc.type === "pdf") {
+            newWindow.document.write(`
             <html>
               <head><title>${doc.name}</title></head>
               <body style="margin:0;padding:0;">
@@ -233,8 +246,8 @@ export default function DocumentManager({
               </body>
             </html>
           `);
-        } else if (doc.type === "image") {
-          newWindow.document.write(`
+          } else if (doc.type === "image") {
+            newWindow.document.write(`
             <html>
               <head><title>${doc.name}</title></head>
               <body style="margin:0;padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;">
@@ -242,12 +255,14 @@ export default function DocumentManager({
               </body>
             </html>
           `);
+          }
         }
       }
-    }
-    setSelectedDoc(doc);
-    onDocumentSelect?.(doc);
-  }, [onDocumentSelect]);
+      setSelectedDoc(doc);
+      onDocumentSelect?.(doc);
+    },
+    [onDocumentSelect],
+  );
 
   // Compact view for sidebar
   if (compact) {
@@ -266,7 +281,7 @@ export default function DocumentManager({
             <Plus className="w-4 h-4 text-slate-300" />
           </button>
         </div>
-        
+
         <input
           ref={fileInputRef}
           type="file"
@@ -275,7 +290,7 @@ export default function DocumentManager({
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
         />
-        
+
         {documents.length > 0 && (
           <div className="space-y-1">
             {documents.slice(0, 3).map((doc) => {
@@ -288,7 +303,9 @@ export default function DocumentManager({
                   className="w-full flex items-center gap-2 p-2 bg-slate-800/50 hover:bg-slate-700/50 rounded-lg transition-colors text-right"
                 >
                   <Icon className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                  <span className="text-xs text-slate-300 truncate flex-1">{doc.name}</span>
+                  <span className="text-xs text-slate-300 truncate flex-1">
+                    {doc.name}
+                  </span>
                 </button>
               );
             })}
@@ -325,7 +342,7 @@ export default function DocumentManager({
           "p-4 border-2 border-dashed m-4 rounded-xl transition-all cursor-pointer",
           isDragging
             ? "border-emerald-500 bg-emerald-500/10"
-            : "border-slate-600 hover:border-slate-500 bg-slate-900/30"
+            : "border-slate-600 hover:border-slate-500 bg-slate-900/30",
         )}
         onClick={() => fileInputRef.current?.click()}
       >
@@ -337,7 +354,7 @@ export default function DocumentManager({
           onChange={(e) => handleFiles(e.target.files)}
           className="hidden"
         />
-        
+
         <div className="text-center py-4">
           {isUploading ? (
             <>
@@ -346,12 +363,18 @@ export default function DocumentManager({
             </>
           ) : (
             <>
-              <Upload className={cn(
-                "w-10 h-10 mx-auto mb-2",
-                isDragging ? "text-emerald-400" : "text-slate-500"
-              )} />
-              <p className="text-sm text-slate-300">גרור קבצים לכאן או לחץ להעלאה</p>
-              <p className="text-xs text-slate-500 mt-1">PDF, תמונות (מקסימום 5MB)</p>
+              <Upload
+                className={cn(
+                  "w-10 h-10 mx-auto mb-2",
+                  isDragging ? "text-emerald-400" : "text-slate-500",
+                )}
+              />
+              <p className="text-sm text-slate-300">
+                גרור קבצים לכאן או לחץ להעלאה
+              </p>
+              <p className="text-xs text-slate-500 mt-1">
+                PDF, תמונות (מקסימום 5MB)
+              </p>
             </>
           )}
         </div>
@@ -385,26 +408,33 @@ export default function DocumentManager({
                     "flex items-center gap-3 p-3 rounded-lg transition-all",
                     selectedDoc?.id === doc.id
                       ? "bg-blue-500/20 border border-blue-500/30"
-                      : "bg-slate-900/50 hover:bg-slate-800/50"
+                      : "bg-slate-900/50 hover:bg-slate-800/50",
                   )}
                 >
-                  <div className={cn(
-                    "p-2 rounded-lg",
-                    doc.type === "pdf" ? "bg-red-500/20" : "bg-blue-500/20"
-                  )}>
-                    <Icon className={cn(
-                      "w-5 h-5",
-                      doc.type === "pdf" ? "text-red-400" : "text-blue-400"
-                    )} />
+                  <div
+                    className={cn(
+                      "p-2 rounded-lg",
+                      doc.type === "pdf" ? "bg-red-500/20" : "bg-blue-500/20",
+                    )}
+                  >
+                    <Icon
+                      className={cn(
+                        "w-5 h-5",
+                        doc.type === "pdf" ? "text-red-400" : "text-blue-400",
+                      )}
+                    />
                   </div>
-                  
+
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{doc.name}</p>
+                    <p className="text-sm font-medium text-white truncate">
+                      {doc.name}
+                    </p>
                     <p className="text-xs text-slate-500">
-                      {formatFileSize(doc.size)} • {new Date(doc.uploadedAt).toLocaleDateString("he-IL")}
+                      {formatFileSize(doc.size)} •{" "}
+                      {new Date(doc.uploadedAt).toLocaleDateString("he-IL")}
                     </p>
                   </div>
-                  
+
                   <div className="flex items-center gap-1">
                     <button
                       type="button"

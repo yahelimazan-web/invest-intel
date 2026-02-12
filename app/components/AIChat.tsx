@@ -17,7 +17,10 @@ import {
 import { cn } from "../lib/utils";
 import { type PropertyAnalysis } from "../services/api";
 import { getPropertyDocuments, type DocumentMetadata } from "./DocumentManager";
-import { loadPropertyDocuments, type PropertyDocument } from "../lib/documents-db";
+import {
+  loadPropertyDocuments,
+  type PropertyDocument,
+} from "../lib/documents-db";
 import { useAuth } from "../lib/auth";
 import { loadUserProperties } from "../lib/portfolio-db";
 
@@ -71,7 +74,9 @@ export default function AIChat({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [propertyDocuments, setPropertyDocuments] = useState<PropertyDocument[]>([]);
+  const [propertyDocuments, setPropertyDocuments] = useState<
+    PropertyDocument[]
+  >([]);
   const [allProperties, setAllProperties] = useState<any[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -121,7 +126,7 @@ export default function AIChat({
 
     // If we have propertyId but no propertyData, build context from portfolio
     if (propertyId && !propertyData && allProperties.length > 0) {
-      const property = allProperties.find(p => p.id === propertyId);
+      const property = allProperties.find((p) => p.id === propertyId);
       if (property) {
         parts.push(`## נתוני הנכס
 - כתובת: ${property.address || property.postcode}
@@ -159,12 +164,19 @@ export default function AIChat({
 - סה"כ עסקאות: ${propertyData.prices.soldPrices?.length || 0}`);
 
         if (propertyData.prices.latestSale) {
-          parts.push(`- עסקה אחרונה: £${propertyData.prices.latestSale.price?.toLocaleString()} (${propertyData.prices.latestSale.date})`);
+          parts.push(
+            `- עסקה אחרונה: £${propertyData.prices.latestSale.price?.toLocaleString()} (${propertyData.prices.latestSale.date})`,
+          );
         }
 
         if (propertyData.prices.averageByYear?.length > 0) {
-          const latest = propertyData.prices.averageByYear[propertyData.prices.averageByYear.length - 1];
-          parts.push(`- מחיר ממוצע (${latest.year}): £${latest.avgPrice?.toLocaleString()}`);
+          const latest =
+            propertyData.prices.averageByYear[
+              propertyData.prices.averageByYear.length - 1
+            ];
+          parts.push(
+            `- מחיר ממוצע (${latest.year}): £${latest.avgPrice?.toLocaleString()}`,
+          );
         }
       }
 
@@ -173,7 +185,14 @@ export default function AIChat({
         parts.push(`## נתוני פשיעה
 - רמת סיכון: ${propertyData.crime.riskLevel || "לא ידוע"}
 - סה"כ אירועים (6 חודשים): ${propertyData.crime.totalCrimes || 0}
-- קטגוריות נפוצות: ${propertyData.crime.categories ? Object.entries(propertyData.crime.categories).slice(0, 3).map(([cat, count]) => `${cat}: ${count}`).join(", ") : "לא ידוע"}`);
+- קטגוריות נפוצות: ${
+          propertyData.crime.categories
+            ? Object.entries(propertyData.crime.categories)
+                .slice(0, 3)
+                .map(([cat, count]) => `${cat}: ${count}`)
+                .join(", ")
+            : "לא ידוע"
+        }`);
       }
 
       // Proximity
@@ -189,7 +208,7 @@ export default function AIChat({
         const docs = getPropertyDocuments(propertyId);
         if (docs.length > 0) {
           parts.push(`## מסמכים מצורפים (legacy)
-${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
+${docs.map((d) => `- ${d.name} (${d.type})`).join("\n")}`);
         }
       }
 
@@ -213,24 +232,36 @@ ${docs.map(d => `- ${d.name} (${d.type})`).join("\n")}`);
     // Documents from Supabase (new system)
     if (propertyDocuments.length > 0) {
       parts.push(`## מסמכים מצורפים (${propertyDocuments.length} קבצים)
-${propertyDocuments.map(d => {
-        const uploadDate = new Date(d.uploaded_at).toLocaleDateString('he-IL');
-        return `- ${d.file_name} (${d.folder_id}, ${uploadDate})${d.summary ? ` - ${d.summary}` : ''}`;
-      }).join("\n")}`);
+${propertyDocuments
+  .map((d) => {
+    const uploadDate = new Date(d.uploaded_at).toLocaleDateString("he-IL");
+    return `- ${d.file_name} (${d.folder_id}, ${uploadDate})${d.summary ? ` - ${d.summary}` : ""}`;
+  })
+  .join("\n")}`);
     }
 
     // Add portfolio context if available
     if (allProperties.length > 0) {
       parts.push(`## תיק השקעות כולל (${allProperties.length} נכסים)
-${allProperties.map(p => {
-        const rent = p.monthlyRent ? `שכירות: £${p.monthlyRent}/חודש` : '';
-        const price = p.purchasePrice ? `מחיר רכישה: £${p.purchasePrice.toLocaleString()}` : '';
-        return `- ${p.address || p.postcode} - ${price} ${rent}`;
-      }).join("\n")}`);
+${allProperties
+  .map((p) => {
+    const rent = p.monthlyRent ? `שכירות: £${p.monthlyRent}/חודש` : "";
+    const price = p.purchasePrice
+      ? `מחיר רכישה: £${p.purchasePrice.toLocaleString()}`
+      : "";
+    return `- ${p.address || p.postcode} - ${price} ${rent}`;
+  })
+  .join("\n")}`);
     }
 
     return parts.join("\n\n");
-  }, [propertyData, propertyId, financialData, propertyDocuments, allProperties]);
+  }, [
+    propertyData,
+    propertyId,
+    financialData,
+    propertyDocuments,
+    allProperties,
+  ]);
 
   // Send message to Gemini API
   const sendMessage = async () => {
@@ -250,7 +281,7 @@ ${allProperties.map(p => {
 
     try {
       const context = buildPropertyContext();
-      
+
       // Call our API route
       const response = await fetch("/api/ai-chat", {
         method: "POST",
@@ -310,12 +341,12 @@ ${allProperties.map(p => {
   if (!isOpen) return null;
 
   return (
-    <div className={cn(
-      "fixed z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 flex flex-col transition-all duration-300",
-      isExpanded
-        ? "inset-4"
-        : "bottom-4 left-4 w-96 h-[500px]"
-    )}>
+    <div
+      className={cn(
+        "fixed z-50 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl shadow-black/50 flex flex-col transition-all duration-300",
+        isExpanded ? "inset-4" : "bottom-4 left-4 w-96 h-[500px]",
+      )}
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-gradient-to-r from-purple-500/10 to-blue-500/10">
         <div className="flex items-center gap-2">
@@ -323,7 +354,9 @@ ${allProperties.map(p => {
             <Sparkles className="w-5 h-5 text-purple-400" />
           </div>
           <div>
-            <h3 className="font-semibold text-white text-sm">AI Property Analyst</h3>
+            <h3 className="font-semibold text-white text-sm">
+              AI Property Analyst
+            </h3>
             <p className="text-xs text-slate-500">
               {propertyId ? `נכס נבחר` : "בחר נכס לניתוח"}
             </p>
@@ -335,7 +368,11 @@ ${allProperties.map(p => {
             onClick={() => setIsExpanded(!isExpanded)}
             className="p-2 hover:bg-slate-800 rounded-lg transition-colors text-slate-400 hover:text-white"
           >
-            {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            {isExpanded ? (
+              <Minimize2 className="w-4 h-4" />
+            ) : (
+              <Maximize2 className="w-4 h-4" />
+            )}
           </button>
           <button
             type="button"
@@ -360,8 +397,10 @@ ${allProperties.map(p => {
         {messages.length === 0 && !isLoading && (
           <div className="text-center py-8">
             <Bot className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400 text-sm mb-4">שאל אותי כל שאלה על הנכס</p>
-            
+            <p className="text-slate-400 text-sm mb-4">
+              שאל אותי כל שאלה על הנכס
+            </p>
+
             {/* Suggested Questions */}
             <div className="space-y-2">
               {suggestedQuestions.map((q, i) => (
@@ -386,28 +425,35 @@ ${allProperties.map(p => {
             key={msg.id}
             className={cn(
               "flex gap-3",
-              msg.role === "user" ? "flex-row-reverse" : ""
+              msg.role === "user" ? "flex-row-reverse" : "",
             )}
           >
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-              msg.role === "user" ? "bg-emerald-500/20" : "bg-purple-500/20"
-            )}>
+            <div
+              className={cn(
+                "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
+                msg.role === "user" ? "bg-emerald-500/20" : "bg-purple-500/20",
+              )}
+            >
               {msg.role === "user" ? (
                 <User className="w-4 h-4 text-emerald-400" />
               ) : (
                 <Bot className="w-4 h-4 text-purple-400" />
               )}
             </div>
-            <div className={cn(
-              "flex-1 max-w-[80%] rounded-2xl px-4 py-2",
-              msg.role === "user"
-                ? "bg-emerald-500/20 text-white"
-                : "bg-slate-800 text-slate-200"
-            )}>
+            <div
+              className={cn(
+                "flex-1 max-w-[80%] rounded-2xl px-4 py-2",
+                msg.role === "user"
+                  ? "bg-emerald-500/20 text-white"
+                  : "bg-slate-800 text-slate-200",
+              )}
+            >
               <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               <p className="text-xs text-slate-500 mt-1">
-                {new Date(msg.timestamp).toLocaleTimeString("he-IL", { hour: "2-digit", minute: "2-digit" })}
+                {new Date(msg.timestamp).toLocaleTimeString("he-IL", {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </p>
             </div>
           </div>
@@ -449,7 +495,7 @@ ${allProperties.map(p => {
             placeholder="שאל על הנכס..."
             disabled={isLoading || !propertyId}
             className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50"
-            style={{ color: 'white' }}
+            style={{ color: "white" }}
           />
           <button
             type="button"
@@ -459,7 +505,7 @@ ${allProperties.map(p => {
               "p-3 rounded-xl transition-all",
               isLoading || !inputValue.trim()
                 ? "bg-slate-700 text-slate-500"
-                : "bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/20"
+                : "bg-purple-500 hover:bg-purple-600 text-white shadow-lg shadow-purple-500/20",
             )}
           >
             {isLoading ? (

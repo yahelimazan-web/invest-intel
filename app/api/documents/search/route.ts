@@ -7,25 +7,30 @@ import { supabase } from "../../../lib/supabase";
 
 export async function POST(request: NextRequest) {
   try {
-    const { userId, propertyId, query, useSemantic = false } = await request.json();
+    const {
+      userId,
+      propertyId,
+      query,
+      useSemantic = false,
+    } = await request.json();
 
     if (!userId || !propertyId || !query) {
       return NextResponse.json(
         { success: false, error: "userId, propertyId, and query are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (!supabase || supabase === null) {
       return NextResponse.json(
         { success: false, error: "Supabase not initialized" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     // Set user context
     try {
-      await supabase.rpc('set_user_context', { user_id_param: userId });
+      await supabase.rpc("set_user_context", { user_id_param: userId });
     } catch (rpcError) {
       console.warn("[Documents Search] set_user_context RPC not available");
     }
@@ -47,7 +52,7 @@ export async function POST(request: NextRequest) {
                   parts: [{ text: query.substring(0, 10000) }],
                 },
               }),
-            }
+            },
           );
 
           if (embeddingResponse.ok) {
@@ -56,16 +61,22 @@ export async function POST(request: NextRequest) {
 
             if (queryEmbedding && Array.isArray(queryEmbedding)) {
               // Use semantic search function
-              const { data, error } = await supabase.rpc('search_documents_by_semantics', {
-                user_id_param: userId,
-                property_id_param: propertyId,
-                query_embedding: `[${queryEmbedding.join(',')}]`,
-                similarity_threshold: 0.7,
-                limit_results: 10,
-              });
+              const { data, error } = await supabase.rpc(
+                "search_documents_by_semantics",
+                {
+                  user_id_param: userId,
+                  property_id_param: propertyId,
+                  query_embedding: `[${queryEmbedding.join(",")}]`,
+                  similarity_threshold: 0.7,
+                  limit_results: 10,
+                },
+              );
 
               if (error) {
-                console.error("[Documents Search] Semantic search error:", error);
+                console.error(
+                  "[Documents Search] Semantic search error:",
+                  error,
+                );
                 // Fallback to text search
               } else if (data && data.length > 0) {
                 return NextResponse.json({
@@ -77,7 +88,10 @@ export async function POST(request: NextRequest) {
             }
           }
         } catch (semanticError) {
-          console.error("[Documents Search] Semantic search failed, falling back to text:", semanticError);
+          console.error(
+            "[Documents Search] Semantic search failed, falling back to text:",
+            semanticError,
+          );
           // Fallback to text search below
         }
       }
@@ -89,7 +103,9 @@ export async function POST(request: NextRequest) {
       .select("*")
       .eq("user_id", userId)
       .eq("property_id", propertyId)
-      .or(`extracted_text.ilike.%${query}%,file_name.ilike.%${query}%,summary.ilike.%${query}%`)
+      .or(
+        `extracted_text.ilike.%${query}%,file_name.ilike.%${query}%,summary.ilike.%${query}%`,
+      )
       .order("uploaded_at", { ascending: false })
       .limit(20);
 
@@ -97,7 +113,7 @@ export async function POST(request: NextRequest) {
       console.error("[Documents Search] Text search error:", error);
       return NextResponse.json(
         { success: false, error: error.message },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -110,7 +126,7 @@ export async function POST(request: NextRequest) {
     console.error("[Documents Search API] Error:", error);
     return NextResponse.json(
       { success: false, error: error?.message || "Unknown error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

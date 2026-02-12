@@ -46,15 +46,14 @@ export default function AlertsPanel({ isOpen, onClose }: AlertsPanelProps) {
   const [alerts, setAlerts] = useState<Alert[]>(ALERTS);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  const filteredAlerts = filter === "unread" 
-    ? alerts.filter((a) => !a.read) 
-    : alerts;
+  const filteredAlerts =
+    filter === "unread" ? alerts.filter((a) => !a.read) : alerts;
 
   const unreadCount = alerts.filter((a) => !a.read).length;
 
   const markAsRead = (id: string) => {
     setAlerts((prev) =>
-      prev.map((a) => (a.id === id ? { ...a, read: true } : a))
+      prev.map((a) => (a.id === id ? { ...a, read: true } : a)),
     );
   };
 
@@ -77,7 +76,7 @@ export default function AlertsPanel({ isOpen, onClose }: AlertsPanelProps) {
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
-      <div 
+      <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
@@ -122,7 +121,7 @@ export default function AlertsPanel({ isOpen, onClose }: AlertsPanelProps) {
                   "px-3 py-1 rounded text-xs font-medium transition-all",
                   filter === f.id
                     ? "bg-slate-700 text-white"
-                    : "text-slate-500 hover:text-white"
+                    : "text-slate-500 hover:text-white",
                 )}
               >
                 {f.label}
@@ -159,7 +158,7 @@ export default function AlertsPanel({ isOpen, onClose }: AlertsPanelProps) {
                     className={cn(
                       "p-4 hover:bg-slate-800/50 transition-colors cursor-pointer border-r-2",
                       alert.read ? "opacity-60" : "",
-                      PRIORITY_COLORS[alert.priority]
+                      PRIORITY_COLORS[alert.priority],
                     )}
                     onClick={() => markAsRead(alert.id)}
                   >
@@ -167,7 +166,7 @@ export default function AlertsPanel({ isOpen, onClose }: AlertsPanelProps) {
                       <div
                         className={cn(
                           "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0",
-                          ALERT_COLORS[alert.type]
+                          ALERT_COLORS[alert.type],
                         )}
                       >
                         <Icon className="w-5 h-5" />
