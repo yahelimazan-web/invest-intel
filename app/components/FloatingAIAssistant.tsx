@@ -8,10 +8,26 @@ import type { PageId } from "./Sidebar";
 // Quick suggestions per page. Private context (property + documents) vs public (market) is
 // applied when sending to AI: dashboard/portfolio use private; market-analysis/ai-analyst support both.
 const QUICK_SUGGESTIONS: Record<PageId, [string, string, string]> = {
-  dashboard: ["What is my portfolio value?", "Show monthly cashflow", "Any alerts?"],
-  portfolio: ["When does my tenancy end?", "Summarise my properties", "Average rent for Liverpool"],
-  "market-analysis": ["What is market trend?", "Compare areas", "Investment recommendations"],
-  "ai-analyst": ["Analyse my portfolio", "Identify document anomalies", "Market report"],
+  dashboard: [
+    "What is my portfolio value?",
+    "Show monthly cashflow",
+    "Any alerts?",
+  ],
+  portfolio: [
+    "When does my tenancy end?",
+    "Summarise my properties",
+    "Average rent for Liverpool",
+  ],
+  "market-analysis": [
+    "What is market trend?",
+    "Compare areas",
+    "Investment recommendations",
+  ],
+  "ai-analyst": [
+    "Analyse my portfolio",
+    "Identify document anomalies",
+    "Market report",
+  ],
 };
 
 interface Message {
@@ -45,7 +61,10 @@ export default function FloatingAIAssistant({
     const t = text.trim();
     if (!t) return;
     setInput("");
-    setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "user", text: t }]);
+    setMessages((prev) => [
+      ...prev,
+      { id: crypto.randomUUID(), role: "user", text: t },
+    ]);
     setMessages((prev) => [
       ...prev,
       {
@@ -78,7 +97,7 @@ export default function FloatingAIAssistant({
             "bg-slate-900/75 backdrop-blur-xl",
             "w-[min(100vw-2rem,360px)] sm:w-[360px]",
             "max-h-[min(70vh,480px)] sm:max-h-[420px]",
-            "mb-3"
+            "mb-3",
           )}
           role="dialog"
           aria-label="AI Chat window"
@@ -88,7 +107,9 @@ export default function FloatingAIAssistant({
               <div className="w-8 h-8 rounded-lg bg-teal-500/30 flex items-center justify-center">
                 <Bot className="w-4 h-4 text-teal-300" aria-hidden />
               </div>
-              <span className="text-sm font-semibold text-slate-100">InvestIntel Assistant</span>
+              <span className="text-sm font-semibold text-slate-100">
+                InvestIntel Assistant
+              </span>
             </div>
             <button
               type="button"
@@ -103,8 +124,13 @@ export default function FloatingAIAssistant({
           <div className="flex-1 overflow-y-auto min-h-[120px] p-4 space-y-3">
             {messages.length === 0 && (
               <div className="text-center py-4">
-                <p className="text-sm text-slate-400 mb-4">Ask about your properties (e.g. tenancy end date) or market data (e.g. average rent by area).</p>
-                <p className="text-xs text-slate-500 mb-3">Quick suggestions:</p>
+                <p className="text-sm text-slate-400 mb-4">
+                  Ask about your properties (e.g. tenancy end date) or market
+                  data (e.g. average rent by area).
+                </p>
+                <p className="text-xs text-slate-500 mb-3">
+                  Quick suggestions:
+                </p>
                 <div className="flex flex-col gap-2">
                   {suggestions.map((s, i) => (
                     <button
@@ -118,7 +144,9 @@ export default function FloatingAIAssistant({
                   ))}
                 </div>
                 {privateContextHint && (
-                  <p className="text-xs text-slate-500 mt-3">Answers based on your properties and documents.</p>
+                  <p className="text-xs text-slate-500 mt-3">
+                    Answers based on your properties and documents.
+                  </p>
                 )}
               </div>
             )}
@@ -129,7 +157,7 @@ export default function FloatingAIAssistant({
                   "text-sm max-w-[90%] rounded-xl px-3 py-2",
                   m.role === "user"
                     ? "ml-0 mr-auto bg-teal-500/30 text-slate-100"
-                    : "mr-0 ml-auto bg-white/10 text-slate-200 border border-white/10"
+                    : "mr-0 ml-auto bg-white/10 text-slate-200 border border-white/10",
                 )}
               >
                 {m.text}
@@ -138,7 +166,10 @@ export default function FloatingAIAssistant({
             <div ref={messagesEndRef} />
           </div>
 
-          <form onSubmit={handleSubmit} className="p-3 border-t border-white/10 shrink-0">
+          <form
+            onSubmit={handleSubmit}
+            className="p-3 border-t border-white/10 shrink-0"
+          >
             <div className="flex gap-2">
               <input
                 type="text"
@@ -167,7 +198,7 @@ export default function FloatingAIAssistant({
           "flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all",
           "bg-slate-900/90 backdrop-blur-md border border-white/10",
           "hover:bg-slate-800/90 hover:scale-105",
-          "focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-50"
+          "focus:outline-none focus:ring-2 focus:ring-teal-400 focus:ring-offset-2 focus:ring-offset-slate-50",
         )}
         aria-expanded={isOpen}
         aria-label={isOpen ? "Close AI assistant" : "Open AI assistant"}
