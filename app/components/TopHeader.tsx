@@ -39,7 +39,7 @@ export default function TopHeader({
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 shadow-sm">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-600" aria-label="Breadcrumb">
-        {crumbs.map((crumb, i) => (
+דדד        {crumbs.map((crumb, i) => (
           <span key={i} className="flex items-center gap-2">
             {i > 0 && <ChevronRight className="h-4 w-4 text-slate-400" />}
             {crumb.href ? (
