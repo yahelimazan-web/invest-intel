@@ -233,7 +233,7 @@ function AppContent() {
     };
     run();
     return () => { cancelled = true; };
-  }, [currentPage, portfolioProperties, user?.id, propertyForDocs]);
+  }, [currentPage, portfolioProperties, user?.id]);
 
   // Run market benchmarks for properties with mapped areas
   useEffect(() => {
