@@ -1,4 +1,4 @@
-# Mobile Project Starter
+# scent-sync-ai
 
 This is a lightweight starter project so you can begin coding immediately from your phone.
 
@@ -24,4 +24,4 @@ python3 -m http.server 8080
 
 Then visit:
 
-`http://localhost:8080/mobile-project/`
+`http://localhost:8080/scent-sync-ai/`
