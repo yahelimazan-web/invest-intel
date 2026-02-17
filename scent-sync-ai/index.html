@@ -3,15 +3,29 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Scent Sync AI</title>
+    <title>scent-sync-ai | Fresh Start</title>
     <link rel="stylesheet" href="./style.css" />
   </head>
   <body>
-    <main class="container">
-      <h1>Scent Sync AI</h1>
-      <p>Your project is ready. Edit the files and start building.</p>
-      <button id="hello-btn" type="button">Start sync</button>
-      <p id="message" class="message"></p>
+    <main class="shell">
+      <header class="hero">
+        <p class="badge">NEW PROJECT</p>
+        <h1>scent-sync-ai</h1>
+        <p class="lead">
+          Fresh workspace initialized. Start by defining your first milestone.
+        </p>
+      </header>
+
+      <section class="panel">
+        <h2>Kickoff checklist</h2>
+        <ul id="checklist">
+          <li>Define product goal</li>
+          <li>Choose data sources</li>
+          <li>Build first prototype</li>
+        </ul>
+        <button id="next-step-btn" type="button">Suggest next step</button>
+        <p id="next-step-output" class="output"></p>
+      </section>
     </main>
     <script src="./script.js"></script>
   </body>

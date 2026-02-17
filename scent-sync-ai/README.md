@@ -1,27 +1,25 @@
 # scent-sync-ai
 
-This is a lightweight starter project so you can begin coding immediately from your phone.
+Fresh start scaffold for the Scent Sync AI idea.
 
-## Project structure
+## What is included
 
-- `index.html` - main page
-- `style.css` - styles
-- `script.js` - page logic
+- `index.html` - clean landing page
+- `style.css` - minimal responsive styles
+- `script.js` - tiny interaction example
 
-## Quick start
+## Start quickly
 
-1. Open this folder in your editor.
-2. Edit `index.html`, `style.css`, or `script.js`.
-3. Open `index.html` in a browser to see changes.
+1. Open the `scent-sync-ai` folder.
+2. Edit the HTML/CSS/JS files.
+3. Open `index.html` in a browser.
 
 ## Optional local server
-
-If you have Python installed, you can run:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then visit:
+Then open:
 
 `http://localhost:8080/scent-sync-ai/`
